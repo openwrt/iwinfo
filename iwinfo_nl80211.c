@@ -31,6 +31,8 @@
 
 #define min(x, y) ((x) < (y)) ? (x) : (y)
 
+#define BIT(x) (1ULL<<(x))
+
 static struct nl80211_state *nls = NULL;
 
 static void nl80211_close(void)
@@ -1620,6 +1622,7 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 	struct nlattr **attr = nl80211_parse(msg);
 	struct nlattr *sinfo[NL80211_STA_INFO_MAX + 1];
 	struct nlattr *rinfo[NL80211_RATE_INFO_MAX + 1];
+	struct nl80211_sta_flag_update *sta_flags;
 
 	static struct nla_policy stats_policy[NL80211_STA_INFO_MAX + 1] = {
 		[NL80211_STA_INFO_INACTIVE_TIME] = { .type = NLA_U32    },
@@ -1628,6 +1631,13 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_STA_INFO_RX_BITRATE]    = { .type = NLA_NESTED },
 		[NL80211_STA_INFO_TX_BITRATE]    = { .type = NLA_NESTED },
 		[NL80211_STA_INFO_SIGNAL]        = { .type = NLA_U8     },
+		[NL80211_STA_INFO_RX_BYTES]      = { .type = NLA_U32    },
+		[NL80211_STA_INFO_TX_BYTES]      = { .type = NLA_U32    },
+		[NL80211_STA_INFO_TX_RETRIES]    = { .type = NLA_U32    },
+		[NL80211_STA_INFO_TX_FAILED]     = { .type = NLA_U32    },
+		[NL80211_STA_INFO_T_OFFSET]      = { .type = NLA_U64    },
+		[NL80211_STA_INFO_STA_FLAGS] =
+			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
 	};
 
 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
@@ -1694,6 +1704,52 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 
 			if (rinfo[NL80211_RATE_INFO_SHORT_GI])
 				e->tx_rate.is_short_gi = 1;
+		}
+
+		if (sinfo[NL80211_STA_INFO_RX_BYTES])
+			e->rx_bytes = nla_get_u32(sinfo[NL80211_STA_INFO_RX_BYTES]);
+
+		if (sinfo[NL80211_STA_INFO_TX_BYTES])
+			e->tx_bytes = nla_get_u32(sinfo[NL80211_STA_INFO_TX_BYTES]);
+
+		if (sinfo[NL80211_STA_INFO_TX_RETRIES])
+			e->tx_retries = nla_get_u32(sinfo[NL80211_STA_INFO_TX_RETRIES]);
+
+		if (sinfo[NL80211_STA_INFO_TX_FAILED])
+			e->tx_failed = nla_get_u32(sinfo[NL80211_STA_INFO_TX_FAILED]);
+
+		if (sinfo[NL80211_STA_INFO_T_OFFSET])
+			e->t_offset = nla_get_u64(sinfo[NL80211_STA_INFO_T_OFFSET]);
+
+		/* Station flags */
+		if (sinfo[NL80211_STA_INFO_STA_FLAGS])
+		{
+			sta_flags = (struct nl80211_sta_flag_update *)
+				nla_data(sinfo[NL80211_STA_INFO_STA_FLAGS]);
+
+			if (sta_flags->mask & BIT(NL80211_STA_FLAG_AUTHORIZED) &&
+			    sta_flags->set & BIT(NL80211_STA_FLAG_AUTHORIZED))
+				e->is_authorized = 1;
+
+			if (sta_flags->mask & BIT(NL80211_STA_FLAG_AUTHENTICATED) &&
+			    sta_flags->set & BIT(NL80211_STA_FLAG_AUTHENTICATED))
+				e->is_authenticated = 1;
+
+			if (sta_flags->mask & BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) &&
+			    sta_flags->set & BIT(NL80211_STA_FLAG_SHORT_PREAMBLE))
+				e->is_preamble_short = 1;
+
+			if (sta_flags->mask & BIT(NL80211_STA_FLAG_WME) &&
+			    sta_flags->set & BIT(NL80211_STA_FLAG_WME))
+				e->is_wme = 1;
+
+			if (sta_flags->mask & BIT(NL80211_STA_FLAG_MFP) &&
+			    sta_flags->set & BIT(NL80211_STA_FLAG_MFP))
+				e->is_mfp = 1;
+
+			if (sta_flags->mask & BIT(NL80211_STA_FLAG_TDLS_PEER) &&
+			    sta_flags->set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+				e->is_tdls = 1;
 		}
 	}
 

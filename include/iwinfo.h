@@ -97,6 +97,17 @@ struct iwinfo_assoclist_entry {
 	uint32_t tx_packets;
 	struct iwinfo_rate_entry rx_rate;
 	struct iwinfo_rate_entry tx_rate;
+	uint32_t rx_bytes;
+	uint32_t tx_bytes;
+	uint32_t tx_retries;
+	uint32_t tx_failed;
+	uint64_t t_offset;
+	uint8_t is_authorized:1;
+	uint8_t is_authenticated:1;
+	uint8_t is_preamble_short:1;
+	uint8_t is_wme:1;
+	uint8_t is_mfp:1;
+	uint8_t is_tdls:1;
 };
 
 struct iwinfo_txpwrlist_entry {
