@@ -2480,6 +2480,7 @@ static int nl80211_get_countrylist(const char *ifname, char *buf, int *len)
 		e->iso3166 = l->iso3166;
 		e->ccode[0] = (l->iso3166 / 256);
 		e->ccode[1] = (l->iso3166 % 256);
+		e->ccode[2] = 0;
 	}
 
 	*len = (count * sizeof(struct iwinfo_country_entry));
