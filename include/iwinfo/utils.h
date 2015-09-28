@@ -37,6 +37,10 @@ int iwinfo_ioctl(int cmd, void *ifr);
 
 int iwinfo_dbm2mw(int in);
 int iwinfo_mw2dbm(int in);
+static inline int iwinfo_mbm2dbm(int gain)
+{
+	return gain / 100;
+}
 
 int iwinfo_ifup(const char *ifname);
 int iwinfo_ifdown(const char *ifname);

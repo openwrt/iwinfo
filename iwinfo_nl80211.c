@@ -1188,22 +1188,35 @@ static int nl80211_get_channel(const char *ifname, int *buf)
 	return -1;
 }
 
+static int nl80211_get_txpower_cb(struct nl_msg *msg, void *arg)
+{
+	int *buf = arg;
+	struct nlattr **tb = nl80211_parse(msg);
+
+	if (tb[NL80211_ATTR_WIPHY_TX_POWER_LEVEL])
+		*buf = iwinfo_mbm2dbm(nla_get_u32(tb[NL80211_ATTR_WIPHY_TX_POWER_LEVEL]));
+
+	return NL_SKIP;
+}
 
 static int nl80211_get_txpower(const char *ifname, int *buf)
 {
-#if 0
 	char *res;
-	char path[PATH_MAX];
+	struct nl80211_msg_conveyor *req;
 
-	res = nl80211_ifname2phy(ifname);
-	snprintf(path, sizeof(path), "/sys/kernel/debug/ieee80211/%s/power",
-	         res ? res : ifname);
+	res = nl80211_phy2ifname(ifname);
+	req = nl80211_msg(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0);
 
-	if ((*buf = nl80211_readint(path)) > -1)
-		return 0;
-#endif
+	if (req)
+	{
+		*buf = 0;
+		nl80211_send(req, nl80211_get_txpower_cb, buf);
+		nl80211_free(req);
+		if (*buf)
+			return 0;
+	}
 
-	return wext_ops.txpower(ifname, buf);
+	return -1;
 }
 
 
