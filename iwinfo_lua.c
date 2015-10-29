@@ -190,7 +190,7 @@ static void iwinfo_L_cryptotable(lua_State *L, struct iwinfo_crypto_entry *c)
 	lua_setfield(L, -2, "wpa");
 
 	lua_newtable(L);
-	for (i = 0, j = 1; i < 8; i++)
+	for (i = 0, j = 1; i < ARRAY_SIZE(IWINFO_CIPHER_NAMES); i++)
 	{
 		if (c->pair_ciphers & (1 << i))
 		{
@@ -201,7 +201,7 @@ static void iwinfo_L_cryptotable(lua_State *L, struct iwinfo_crypto_entry *c)
 	lua_setfield(L, -2, "pair_ciphers");
 
 	lua_newtable(L);
-	for (i = 0, j = 1; i < 8; i++)
+	for (i = 0, j = 1; i < ARRAY_SIZE(IWINFO_CIPHER_NAMES); i++)
 	{
 		if (c->group_ciphers & (1 << i))
 		{
@@ -212,7 +212,7 @@ static void iwinfo_L_cryptotable(lua_State *L, struct iwinfo_crypto_entry *c)
 	lua_setfield(L, -2, "group_ciphers");
 
 	lua_newtable(L);
-	for (i = 0, j = 1; i < 8; i++)
+	for (i = 0, j = 1; i < ARRAY_SIZE(IWINFO_KMGMT_NAMES); i++)
 	{
 		if (c->auth_suites & (1 << i))
 		{
@@ -223,7 +223,7 @@ static void iwinfo_L_cryptotable(lua_State *L, struct iwinfo_crypto_entry *c)
 	lua_setfield(L, -2, "auth_suites");
 
 	lua_newtable(L);
-	for (i = 0, j = 1; i < 8; i++)
+	for (i = 0, j = 1; i < ARRAY_SIZE(IWINFO_AUTH_NAMES); i++)
 	{
 		if (c->auth_algs & (1 << i))
 		{
