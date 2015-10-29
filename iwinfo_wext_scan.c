@@ -25,7 +25,7 @@
 
 static int wext_ioctl(const char *ifname, int cmd, struct iwreq *wrq)
 {
-	strncpy(wrq->ifr_name, ifname, IFNAMSIZ);
+	strncpy(wrq->ifr_name, ifname, IFNAMSIZ - 1);
 	return iwinfo_ioctl(cmd, wrq);
 }
 
