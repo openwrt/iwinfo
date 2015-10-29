@@ -604,7 +604,7 @@ static char * nl80211_phy2ifname(const char *ifname)
 					    ((ifidx < 0) || (cifidx < ifidx)))
 					{
 						ifidx = cifidx;
-						strncpy(nif, e->d_name, sizeof(nif));
+						strncpy(nif, e->d_name, sizeof(nif) - 1);
 					}
 				}
 			}
