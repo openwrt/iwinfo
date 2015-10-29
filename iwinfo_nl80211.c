@@ -218,9 +218,6 @@ static struct nl80211_msg_conveyor * nl80211_new(struct genl_family *family,
 	return &cv;
 
 err:
-	if (cb)
-		nl_cb_put(cb);
-
 	if (req)
 		nlmsg_free(req);
 
