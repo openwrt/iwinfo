@@ -81,7 +81,7 @@ int iwinfo_ifup(const char *ifname)
 {
 	struct ifreq ifr;
 
-	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+	strncpy(ifr.ifr_name, ifname, IFNAMSIZ - 1);
 
 	if (iwinfo_ioctl(SIOCGIFFLAGS, &ifr))
 		return 0;
@@ -95,7 +95,7 @@ int iwinfo_ifdown(const char *ifname)
 {
 	struct ifreq ifr;
 
-	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+	strncpy(ifr.ifr_name, ifname, IFNAMSIZ - 1);
 
 	if (iwinfo_ioctl(SIOCGIFFLAGS, &ifr))
 		return 0;
@@ -109,7 +109,7 @@ int iwinfo_ifmac(const char *ifname)
 {
 	struct ifreq ifr;
 
-	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+	strncpy(ifr.ifr_name, ifname, IFNAMSIZ - 1);
 
 	if (iwinfo_ioctl(SIOCGIFHWADDR, &ifr))
 		return 0;
