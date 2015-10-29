@@ -2698,7 +2698,7 @@ static int nl80211_get_mbssid_support(const char *ifname, int *buf)
 
 static int nl80211_get_hardware_id(const char *ifname, char *buf)
 {
-	int rv;
+	int rv = -1;
 	char *res;
 
 	/* Got a radioX pseudo interface, find some interface on it or create one */
