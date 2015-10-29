@@ -951,7 +951,7 @@ static void nl80211_hostapd_hup(const char *ifname)
 	if (phy)
 	{
 		snprintf(buf, sizeof(buf), "/var/run/wifi-%s.pid", phy);
-		if ((fd = open(buf, O_RDONLY)) > 0)
+		if ((fd = open(buf, O_RDONLY)) >= 0)
 		{
 			if (read(fd, buf, sizeof(buf)) > 0)
 				pid = atoi(buf);
