@@ -280,7 +280,7 @@ static char * format_hwmodes(int modes)
 
 static char * format_assocrate(struct iwinfo_rate_entry *r)
 {
-	static char buf[40];
+	static char buf[80];
 	char *p = buf;
 	int l = sizeof(buf);
 
@@ -293,13 +293,21 @@ static char * format_assocrate(struct iwinfo_rate_entry *r)
 		p += snprintf(p, l, "%s", format_rate(r->rate));
 		l = sizeof(buf) - (p - buf);
 
-		if (r->mcs >= 0)
+		if (r->is_ht)
 		{
-			p += snprintf(p, l, ", MCS %d, %dMHz", r->mcs, 20 + r->is_40mhz*20);
+			p += snprintf(p, l, ", MCS %d, %dMHz", r->mcs, r->mhz);
+			l = sizeof(buf) - (p - buf);
+		}
+		else if (r->is_vht)
+		{
+			p += snprintf(p, l, ", VHT-MCS %d, %dMHz", r->mcs, r->mhz);
 			l = sizeof(buf) - (p - buf);
 
-			if (r->is_short_gi)
-				p += snprintf(p, l, ", short GI");
+			if (r->nss)
+			{
+				p += snprintf(p, l, ", VHT-NSS %d", r->nss);
+				l = sizeof(buf) - (p - buf);
+			}
 		}
 	}
 
