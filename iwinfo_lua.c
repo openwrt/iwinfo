@@ -248,6 +248,44 @@ static int iwinfo_L_mode(lua_State *L, int (*func)(const char *, int *))
 	return 1;
 }
 
+static void set_rateinfo(lua_State *L, struct iwinfo_rate_entry *r, bool rx)
+{
+	lua_pushnumber(L, r->rate);
+	lua_setfield(L, -2, rx ? "rx_rate" : "tx_rate");
+
+	lua_pushboolean(L, r->is_ht);
+	lua_setfield(L, -2, rx ? "rx_ht" : "tx_ht");
+
+	lua_pushboolean(L, r->is_vht);
+	lua_setfield(L, -2, rx ? "rx_vht" : "tx_vht");
+
+	lua_pushnumber(L, r->mhz);
+	lua_setfield(L, -2, rx ? "rx_mhz" : "tx_mhz");
+
+	if (r->is_ht)
+	{
+		lua_pushboolean(L, r->is_40mhz);
+		lua_setfield(L, -2, rx ? "rx_40mhz" : "tx_40mhz");
+
+		lua_pushnumber(L, r->mcs);
+		lua_setfield(L, -2, rx ? "rx_mcs" : "tx_mcs");
+
+		lua_pushboolean(L, r->is_short_gi);
+		lua_setfield(L, -2, rx ? "rx_short_gi" : "tx_short_gi");
+	}
+	else if (r->is_vht)
+	{
+		lua_pushnumber(L, r->mcs);
+		lua_setfield(L, -2, rx ? "rx_mcs" : "tx_mcs");
+
+		lua_pushnumber(L, r->nss);
+		lua_setfield(L, -2, rx ? "rx_nss" : "tx_nss");
+
+		lua_pushboolean(L, r->is_short_gi);
+		lua_setfield(L, -2, rx ? "rx_short_gi" : "tx_short_gi");
+	}
+}
+
 /* Wrapper for assoclist */
 static int iwinfo_L_assoclist(lua_State *L, int (*func)(const char *, char *, int *))
 {
@@ -287,35 +325,8 @@ static int iwinfo_L_assoclist(lua_State *L, int (*func)(const char *, char *, in
 			lua_pushnumber(L, e->tx_packets);
 			lua_setfield(L, -2, "tx_packets");
 
-			lua_pushnumber(L, e->rx_rate.rate);
-			lua_setfield(L, -2, "rx_rate");
-
-			lua_pushnumber(L, e->tx_rate.rate);
-			lua_setfield(L, -2, "tx_rate");
-
-			if (e->rx_rate.mcs >= 0)
-			{
-				lua_pushnumber(L, e->rx_rate.mcs);
-				lua_setfield(L, -2, "rx_mcs");
-
-				lua_pushboolean(L, e->rx_rate.is_40mhz);
-				lua_setfield(L, -2, "rx_40mhz");
-
-				lua_pushboolean(L, e->rx_rate.is_short_gi);
-				lua_setfield(L, -2, "rx_short_gi");
-			}
-
-			if (e->tx_rate.mcs >= 0)
-			{
-				lua_pushnumber(L, e->tx_rate.mcs);
-				lua_setfield(L, -2, "tx_mcs");
-
-				lua_pushboolean(L, e->tx_rate.is_40mhz);
-				lua_setfield(L, -2, "tx_40mhz");
-
-				lua_pushboolean(L, e->tx_rate.is_short_gi);
-				lua_setfield(L, -2, "tx_short_gi");
-			}
+			set_rateinfo(L, &e->rx_rate, true);
+			set_rateinfo(L, &e->tx_rate, false);
 
 			lua_setfield(L, -2, macstr);
 		}
