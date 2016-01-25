@@ -1625,6 +1625,48 @@ static int nl80211_get_phyname(const char *ifname, char *buf)
 }
 
 
+static void nl80211_parse_rateinfo(struct nlattr **ri,
+                                   struct iwinfo_rate_entry *re)
+{
+	if (ri[NL80211_RATE_INFO_BITRATE32])
+		re->rate = nla_get_u32(ri[NL80211_RATE_INFO_BITRATE32]) * 100;
+	else if (ri[NL80211_RATE_INFO_BITRATE])
+		re->rate = nla_get_u16(ri[NL80211_RATE_INFO_BITRATE]) * 100;
+
+	if (ri[NL80211_RATE_INFO_VHT_MCS])
+	{
+		re->is_vht = 1;
+		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_VHT_MCS]);
+
+		if (ri[NL80211_RATE_INFO_VHT_NSS])
+			re->nss = nla_get_u8(ri[NL80211_RATE_INFO_VHT_NSS]);
+	}
+	else if (ri[NL80211_RATE_INFO_MCS])
+	{
+		re->is_ht = 1;
+		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_MCS]);
+	}
+
+	if (ri[NL80211_RATE_INFO_5_MHZ_WIDTH])
+		re->mhz = 5;
+	else if (ri[NL80211_RATE_INFO_10_MHZ_WIDTH])
+		re->mhz = 10;
+	else if (ri[NL80211_RATE_INFO_40_MHZ_WIDTH])
+		re->mhz = 40;
+	else if (ri[NL80211_RATE_INFO_80_MHZ_WIDTH])
+		re->mhz = 80;
+	else if (ri[NL80211_RATE_INFO_80P80_MHZ_WIDTH] ||
+	         ri[NL80211_RATE_INFO_160_MHZ_WIDTH])
+		re->mhz = 160;
+	else
+		re->mhz = 20;
+
+	if (ri[NL80211_RATE_INFO_SHORT_GI])
+		re->is_short_gi = 1;
+
+	re->is_40mhz = (re->mhz == 40);
+}
+
 static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 {
 	struct nl80211_array_buf *arr = arg;
@@ -1683,38 +1725,12 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		if (sinfo[NL80211_STA_INFO_RX_BITRATE] &&
 		    !nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
 		                      sinfo[NL80211_STA_INFO_RX_BITRATE], rate_policy))
-		{
-			if (rinfo[NL80211_RATE_INFO_BITRATE])
-				e->rx_rate.rate =
-					nla_get_u16(rinfo[NL80211_RATE_INFO_BITRATE]) * 100;
-
-			if (rinfo[NL80211_RATE_INFO_MCS])
-				e->rx_rate.mcs = nla_get_u8(rinfo[NL80211_RATE_INFO_MCS]);
-
-			if (rinfo[NL80211_RATE_INFO_40_MHZ_WIDTH])
-				e->rx_rate.is_40mhz = 1;
-
-			if (rinfo[NL80211_RATE_INFO_SHORT_GI])
-				e->rx_rate.is_short_gi = 1;
-		}
+			nl80211_parse_rateinfo(rinfo, &e->rx_rate);
 
 		if (sinfo[NL80211_STA_INFO_TX_BITRATE] &&
 		    !nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
 		                      sinfo[NL80211_STA_INFO_TX_BITRATE], rate_policy))
-		{
-			if (rinfo[NL80211_RATE_INFO_BITRATE])
-				e->tx_rate.rate =
-					nla_get_u16(rinfo[NL80211_RATE_INFO_BITRATE]) * 100;
-
-			if (rinfo[NL80211_RATE_INFO_MCS])
-				e->tx_rate.mcs = nla_get_u8(rinfo[NL80211_RATE_INFO_MCS]);
-
-			if (rinfo[NL80211_RATE_INFO_40_MHZ_WIDTH])
-				e->tx_rate.is_40mhz = 1;
-
-			if (rinfo[NL80211_RATE_INFO_SHORT_GI])
-				e->tx_rate.is_short_gi = 1;
-		}
+			nl80211_parse_rateinfo(rinfo, &e->tx_rate);
 
 		if (sinfo[NL80211_STA_INFO_RX_BYTES])
 			e->rx_bytes = nla_get_u32(sinfo[NL80211_STA_INFO_RX_BYTES]);

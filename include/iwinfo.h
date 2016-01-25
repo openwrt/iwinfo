@@ -89,6 +89,10 @@ struct iwinfo_rate_entry {
 	int8_t mcs;
 	uint8_t is_40mhz:1;
 	uint8_t is_short_gi:1;
+	uint8_t is_ht:1;
+	uint8_t is_vht:1;
+	uint8_t mhz;
+	uint8_t nss;
 };
 
 struct iwinfo_assoclist_entry {
