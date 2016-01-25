@@ -37,17 +37,20 @@
 #define IWINFO_CIPHER_WEP104 (1 << 5)
 #define IWINFO_CIPHER_AESOCB (1 << 6)
 #define IWINFO_CIPHER_CKIP   (1 << 7)
+#define IWINFO_CIPHER_COUNT  8
 
 #define IWINFO_KMGMT_NONE    (1 << 0)
 #define IWINFO_KMGMT_8021x   (1 << 1)
 #define IWINFO_KMGMT_PSK     (1 << 2)
+#define IWINFO_KMGMT_COUNT   3
 
 #define IWINFO_AUTH_OPEN     (1 << 0)
 #define IWINFO_AUTH_SHARED   (1 << 1)
+#define IWINFO_AUTH_COUNT    2
 
-extern const char *IWINFO_CIPHER_NAMES[];
-extern const char *IWINFO_KMGMT_NAMES[];
-extern const char *IWINFO_AUTH_NAMES[];
+extern const char *IWINFO_CIPHER_NAMES[IWINFO_CIPHER_COUNT];
+extern const char *IWINFO_KMGMT_NAMES[IWINFO_KMGMT_COUNT];
+extern const char *IWINFO_AUTH_NAMES[IWINFO_AUTH_COUNT];
 
 
 enum iwinfo_opmode {
