@@ -245,6 +245,9 @@ static int nl80211_phy_idx_from_uci_path(struct uci_section *s)
 
 	snprintf(buf, sizeof(buf), "/sys/devices/%s/ieee80211/*/index", opt);  /**/
 	if (glob(buf, 0, NULL, &gl))
+		snprintf(buf, sizeof(buf), "/sys/devices/platform/%s/ieee80211/*/index", opt);  /**/
+
+	if (glob(buf, 0, NULL, &gl))
 		return -1;
 
 	if (gl.gl_pathc > 0)
