@@ -374,7 +374,7 @@ static int nl80211_send(struct nl80211_msg_conveyor *cv,
                         void *cb_arg)
 {
 	static struct nl80211_msg_conveyor rcv;
-	int err = 1;
+	int err;
 
 	if (cb_func)
 		nl_cb_set(cv->cb, NL_CB_VALID, NL_CB_CUSTOM, cb_func, cb_arg);
@@ -386,6 +386,8 @@ static int nl80211_send(struct nl80211_msg_conveyor *cv,
 	if (err < 0)
 		goto out;
 
+	err = 1;
+
 	nl_cb_err(cv->cb,               NL_CB_CUSTOM, nl80211_msg_error,  &err);
 	nl_cb_set(cv->cb, NL_CB_FINISH, NL_CB_CUSTOM, nl80211_msg_finish, &err);
 	nl_cb_set(cv->cb, NL_CB_ACK,    NL_CB_CUSTOM, nl80211_msg_ack,    &err);
@@ -394,7 +396,22 @@ static int nl80211_send(struct nl80211_msg_conveyor *cv,
 		nl_recvmsgs(nls->nl_sock, cv->cb);
 
 out:
+	nl80211_free(cv);
 	return err;
+}
+
+static int nl80211_request(const char *ifname, int cmd, int flags,
+                           int (*cb_func)(struct nl_msg *, void *),
+                           void *cb_arg)
+{
+	struct nl80211_msg_conveyor *cv;
+
+	cv = nl80211_msg(ifname, cmd, flags);
+
+	if (!cv)
+		return -ENOMEM;
+
+	return nl80211_send(cv, cb_func, cb_arg);
 }
 
 static struct nlattr ** nl80211_parse(struct nl_msg *msg)
@@ -443,18 +460,24 @@ static int nl80211_subscribe(const char *family, const char *group)
 {
 	struct nl80211_group_conveyor cv = { .name = group, .id = -ENOENT };
 	struct nl80211_msg_conveyor *req;
+	int err;
 
 	req = nl80211_ctl(CTRL_CMD_GETFAMILY, 0);
 	if (req)
 	{
 		NLA_PUT_STRING(req->msg, CTRL_ATTR_FAMILY_NAME, family);
-		nl80211_send(req, nl80211_subscribe_cb, &cv);
+		err = nl80211_send(req, nl80211_subscribe_cb, &cv);
+
+		if (err)
+			return err;
+
+		return nl_socket_add_membership(nls->nl_sock, cv.id);
 
 nla_put_failure:
 		nl80211_free(req);
 	}
 
-	return nl_socket_add_membership(nls->nl_sock, cv.id);
+	return -ENOMEM;
 }
 
 
@@ -550,16 +573,11 @@ static int nl80211_ifname2phy_cb(struct nl_msg *msg, void *arg)
 static char * nl80211_ifname2phy(const char *ifname)
 {
 	static char phy[32] = { 0 };
-	struct nl80211_msg_conveyor *req;
 
 	memset(phy, 0, sizeof(phy));
 
-	req = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, 0);
-	if (req)
-	{
-		nl80211_send(req, nl80211_ifname2phy_cb, phy);
-		nl80211_free(req);
-	}
+	nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
+	                nl80211_ifname2phy_cb, phy);
 
 	return phy[0] ? phy : NULL;
 }
@@ -642,17 +660,13 @@ static int nl80211_get_mode_cb(struct nl_msg *msg, void *arg)
 static int nl80211_get_mode(const char *ifname, int *buf)
 {
 	char *res;
-	struct nl80211_msg_conveyor *req;
 
-	res = nl80211_phy2ifname(ifname);
-	req = nl80211_msg(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0);
 	*buf = IWINFO_OPMODE_UNKNOWN;
 
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_mode_cb, buf);
-		nl80211_free(req);
-	}
+	res = nl80211_phy2ifname(ifname);
+
+	nl80211_request(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0,
+	                nl80211_get_mode_cb, buf);
 
 	return (*buf == IWINFO_OPMODE_UNKNOWN) ? -1 : 0;
 }
@@ -892,7 +906,7 @@ static int __nl80211_wpactl_query(const char *ifname, ...)
 
 static char * nl80211_ifadd(const char *ifname)
 {
-	char *rv = NULL, path[PATH_MAX];
+	char path[PATH_MAX];
 	static char nif[IFNAMSIZ] = { 0 };
 	struct nl80211_msg_conveyor *req;
 	FILE *sysfs;
@@ -916,18 +930,19 @@ static char * nl80211_ifadd(const char *ifname)
 			fclose(sysfs);
 		}
 
-		rv = nif;
+		return nif;
 
 	nla_put_failure:
 		nl80211_free(req);
 	}
 
-	return rv;
+	return NULL;
 }
 
 static void nl80211_ifdel(const char *ifname)
 {
 	struct nl80211_msg_conveyor *req;
+	int err;
 
 	req = nl80211_msg(ifname, NL80211_CMD_DEL_INTERFACE, 0);
 	if (req)
@@ -935,6 +950,7 @@ static void nl80211_ifdel(const char *ifname)
 		NLA_PUT_STRING(req->msg, NL80211_ATTR_IFNAME, ifname);
 
 		nl80211_send(req, NULL, NULL);
+		return;
 
 	nla_put_failure:
 		nl80211_free(req);
@@ -1035,47 +1051,33 @@ static int nl80211_get_ssid_bssid_cb(struct nl_msg *msg, void *arg)
 static int nl80211_get_ssid(const char *ifname, char *buf)
 {
 	char *res;
-	struct nl80211_msg_conveyor *req;
-	struct nl80211_ssid_bssid sb;
+	struct nl80211_ssid_bssid sb = { .ssid = (unsigned char *)buf };
 
 	/* try to find ssid from scan dump results */
 	res = nl80211_phy2ifname(ifname);
-	req = nl80211_msg(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP);
+	sb.ssid[0] = 0;
 
-	sb.ssid = (unsigned char *)buf;
-	*buf = 0;
-
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_ssid_bssid_cb, &sb);
-		nl80211_free(req);
-	}
+	nl80211_request(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP,
+	                nl80211_get_ssid_bssid_cb, &sb);
 
 	/* failed, try to find from hostapd info */
-	if (*buf == 0)
-		nl80211_hostapd_query(ifname, "ssid", buf, IWINFO_ESSID_MAX_SIZE + 1);
+	if (sb.ssid[0] == 0)
+		nl80211_hostapd_query(ifname, "ssid", sb.ssid,
+		                      IWINFO_ESSID_MAX_SIZE + 1);
 
-	return (*buf == 0) ? -1 : 0;
+	return (sb.ssid[0] == 0) ? -1 : 0;
 }
 
 static int nl80211_get_bssid(const char *ifname, char *buf)
 {
 	char *res, bssid[sizeof("FF:FF:FF:FF:FF:FF\0")];
-	struct nl80211_msg_conveyor *req;
-	struct nl80211_ssid_bssid sb;
+	struct nl80211_ssid_bssid sb = { };
 
 	/* try to find bssid from scan dump results */
 	res = nl80211_phy2ifname(ifname);
-	req = nl80211_msg(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP);
 
-	sb.ssid = NULL;
-	sb.bssid[0] = 0;
-
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_ssid_bssid_cb, &sb);
-		nl80211_free(req);
-	}
+	nl80211_request(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP,
+	                nl80211_get_ssid_bssid_cb, &sb);
 
 	/* failed, try to find mac from hostapd info */
 	if ((sb.bssid[0] == 0) &&
@@ -1139,18 +1141,13 @@ static int nl80211_get_frequency_info_cb(struct nl_msg *msg, void *arg)
 static int nl80211_get_frequency(const char *ifname, int *buf)
 {
 	char *res, channel[4], hwmode[2];
-	struct nl80211_msg_conveyor *req;
 
 	/* try to find frequency from interface info */
 	res = nl80211_phy2ifname(ifname);
-	req = nl80211_msg(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0);
 	*buf = 0;
 
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_frequency_info_cb, buf);
-		nl80211_free(req);
-	}
+	nl80211_request(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0,
+	                nl80211_get_frequency_info_cb, buf);
 
 	/* failed, try to find frequency from hostapd info */
 	if ((*buf == 0) &&
@@ -1164,13 +1161,9 @@ static int nl80211_get_frequency(const char *ifname, int *buf)
 	if (*buf == 0)
 	{
 		res = nl80211_phy2ifname(ifname);
-		req = nl80211_msg(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP);
 
-		if (req)
-		{
-			nl80211_send(req, nl80211_get_frequency_scan_cb, buf);
-			nl80211_free(req);
-		}
+		nl80211_request(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP,
+		                nl80211_get_frequency_scan_cb, buf);
 	}
 
 	return (*buf == 0) ? -1 : 0;
@@ -1201,21 +1194,15 @@ static int nl80211_get_txpower_cb(struct nl_msg *msg, void *arg)
 static int nl80211_get_txpower(const char *ifname, int *buf)
 {
 	char *res;
-	struct nl80211_msg_conveyor *req;
 
 	res = nl80211_phy2ifname(ifname);
-	req = nl80211_msg(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0);
+	*buf = 0;
 
-	if (req)
-	{
-		*buf = 0;
-		nl80211_send(req, nl80211_get_txpower_cb, buf);
-		nl80211_free(req);
-		if (*buf)
-			return 0;
-	}
+	if (nl80211_request(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0,
+	                    nl80211_get_txpower_cb, buf))
+		return -1;
 
-	return -1;
+	return 0;
 }
 
 
@@ -1283,7 +1270,6 @@ static void nl80211_fill_signal(const char *ifname, struct nl80211_rssi_rate *r)
 {
 	DIR *d;
 	struct dirent *de;
-	struct nl80211_msg_conveyor *req;
 
 	r->rssi = 0;
 	r->rate = 0;
@@ -1296,14 +1282,8 @@ static void nl80211_fill_signal(const char *ifname, struct nl80211_rssi_rate *r)
 			    (!de->d_name[strlen(ifname)] ||
 			     !strncmp(&de->d_name[strlen(ifname)], ".sta", 4)))
 			{
-				req = nl80211_msg(de->d_name, NL80211_CMD_GET_STATION,
-				                  NLM_F_DUMP);
-
-				if (req)
-				{
-					nl80211_send(req, nl80211_fill_signal_cb, r);
-					nl80211_free(req);
-				}
+				nl80211_request(de->d_name, NL80211_CMD_GET_STATION,
+				                NLM_F_DUMP, nl80211_fill_signal_cb, r);
 			}
 		}
 
@@ -1371,24 +1351,17 @@ static int nl80211_get_noise_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_noise(const char *ifname, int *buf)
 {
-	int8_t noise;
-	struct nl80211_msg_conveyor *req;
+	int8_t noise = 0;
 
-	req = nl80211_msg(ifname, NL80211_CMD_GET_SURVEY, NLM_F_DUMP);
-	if (req)
-	{
-		noise = 0;
+	if (nl80211_request(ifname, NL80211_CMD_GET_SURVEY, NLM_F_DUMP,
+	                    nl80211_get_noise_cb, &noise))
+		goto out;
 
-		nl80211_send(req, nl80211_get_noise_cb, &noise);
-		nl80211_free(req);
+	*buf = noise;
+	return 0;
 
-		if (noise)
-		{
-			*buf = noise;
-			return 0;
-		}
-	}
-
+out:
+	*buf = 0;
 	return -1;
 }
 
@@ -1792,7 +1765,6 @@ static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
 	DIR *d;
 	int i, noise = 0;
 	struct dirent *de;
-	struct nl80211_msg_conveyor *req;
 	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
 	struct iwinfo_assoclist_entry *e;
 
@@ -1804,14 +1776,8 @@ static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
 			    (!de->d_name[strlen(ifname)] ||
 			     !strncmp(&de->d_name[strlen(ifname)], ".sta", 4)))
 			{
-				req = nl80211_msg(de->d_name, NL80211_CMD_GET_STATION,
-				                  NLM_F_DUMP);
-
-				if (req)
-				{
-					nl80211_send(req, nl80211_get_assoclist_cb, &arr);
-					nl80211_free(req);
-				}
+				nl80211_request(de->d_name, NL80211_CMD_GET_STATION,
+				                NLM_F_DUMP, nl80211_get_assoclist_cb, &arr);
 			}
 		}
 
@@ -1879,7 +1845,7 @@ static int nl80211_get_txpwrlist_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_txpwrlist(const char *ifname, char *buf, int *len)
 {
-	int ch_cur;
+	int err, ch_cur;
 	int dbm_max = -1, dbm_cur, dbm_cnt;
 	struct nl80211_msg_conveyor *req;
 	struct iwinfo_txpwrlist_entry entry;
@@ -1887,17 +1853,13 @@ static int nl80211_get_txpwrlist(const char *ifname, char *buf, int *len)
 	if (nl80211_get_channel(ifname, &ch_cur))
 		ch_cur = 0;
 
-	req = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, 0);
-	if (req)
-	{
-		/* initialize the value pointer with channel for callback */
-		dbm_max = ch_cur;
+	/* initialize the value pointer with channel for callback */
+	dbm_max = ch_cur;
 
-		nl80211_send(req, nl80211_get_txpwrlist_cb, &dbm_max);
-		nl80211_free(req);
-	}
+	err = nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
+	                      nl80211_get_txpwrlist_cb, &dbm_max);
 
-	if (dbm_max > 0)
+	if (!err)
 	{
 		for (dbm_cur = 0, dbm_cnt = 0;
 		     dbm_cur < dbm_max;
@@ -2100,27 +2062,24 @@ static int nl80211_get_scanlist_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_scanlist_nl(const char *ifname, char *buf, int *len)
 {
-	struct nl80211_msg_conveyor *req;
 	struct nl80211_scanlist sl = { .e = (struct iwinfo_scanlist_entry *)buf };
 
-	req = nl80211_msg(ifname, NL80211_CMD_TRIGGER_SCAN, 0);
-	if (req)
-	{
-		nl80211_send(req, NULL, NULL);
-		nl80211_free(req);
-	}
+	if (nl80211_request(ifname, NL80211_CMD_TRIGGER_SCAN, 0, NULL, NULL))
+		goto out;
 
-	nl80211_wait("nl80211", "scan", NL80211_CMD_NEW_SCAN_RESULTS);
+	if (nl80211_wait("nl80211", "scan", NL80211_CMD_NEW_SCAN_RESULTS))
+		goto out;
 
-	req = nl80211_msg(ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP);
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_scanlist_cb, &sl);
-		nl80211_free(req);
-	}
+	if (nl80211_request(ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP,
+	                    nl80211_get_scanlist_cb, &sl))
+		goto out;
 
 	*len = sl.len * sizeof(struct iwinfo_scanlist_entry);
-	return *len ? 0 : -1;
+	return 0;
+
+out:
+	*len = 0;
+	return -1;
 }
 
 static int wpasupp_ssid_decode(const char *in, char *out, int outlen)
@@ -2447,22 +2406,17 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_freqlist(const char *ifname, char *buf, int *len)
 {
-	struct nl80211_msg_conveyor *req;
 	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
 
-	req = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, 0);
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_freqlist_cb, &arr);
-		nl80211_free(req);
-	}
+	if (nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
+	                    nl80211_get_freqlist_cb, &arr))
+		goto out;
 
-	if (arr.count > 0)
-	{
-		*len = arr.count * sizeof(struct iwinfo_freqlist_entry);
-		return 0;
-	}
+	*len = arr.count * sizeof(struct iwinfo_freqlist_entry);
+	return 0;
 
+out:
+	*len = 0;
 	return -1;
 }
 
@@ -2481,20 +2435,11 @@ static int nl80211_get_country_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_country(const char *ifname, char *buf)
 {
-	int rv = -1;
-	struct nl80211_msg_conveyor *req;
+	if (nl80211_request(ifname, NL80211_CMD_GET_REG, 0,
+	                    nl80211_get_country_cb, buf))
+		return -1;
 
-	req = nl80211_msg(ifname, NL80211_CMD_GET_REG, 0);
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_country_cb, buf);
-		nl80211_free(req);
-
-		if (buf[0])
-			rv = 0;
-	}
-
-	return rv;
+	return 0;
 }
 
 static int nl80211_get_countrylist(const char *ifname, char *buf, int *len)
@@ -2604,43 +2549,39 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_hwmodelist(const char *ifname, int *buf)
 {
-	struct nl80211_msg_conveyor *req;
 	struct nl80211_modes m = { 0 };
 
-	req = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, 0);
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_modelist_cb, &m);
-		nl80211_free(req);
-	}
+	if (nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
+	                    nl80211_get_modelist_cb, &m))
+		goto out;
 
-	if (m.ok)
-	{
-		*buf = m.hw;
-		return 0;
-	}
+	if (!m.ok)
+		goto out;
 
+	*buf = m.hw;
+	return 0;
+
+out:
+	*buf = 0;
 	return -1;
 }
 
 static int nl80211_get_htmodelist(const char *ifname, int *buf)
 {
-	struct nl80211_msg_conveyor *req;
 	struct nl80211_modes m = { 0 };
 
-	req = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, 0);
-	if (req)
-	{
-		nl80211_send(req, nl80211_get_modelist_cb, &m);
-		nl80211_free(req);
-	}
+	if (nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
+	                    nl80211_get_modelist_cb, &m))
+		goto out;
 
-	if (m.ok)
-	{
-		*buf = m.ht;
-		return 0;
-	}
+	if (!m.ok)
+		goto out;
 
+	*buf = m.ht;
+	return 0;
+
+out:
+	*buf = 0;
 	return -1;
 }
 
@@ -2700,14 +2641,10 @@ static int nl80211_get_ifcomb_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_mbssid_support(const char *ifname, int *buf)
 {
-	struct nl80211_msg_conveyor *req;
-
-	req = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, 0);
-	if (!req)
+	if (nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
+	                    nl80211_get_ifcomb_cb, buf))
 		return -1;
 
-	nl80211_send(req, nl80211_get_ifcomb_cb, buf);
-	nl80211_free(req);
 	return 0;
 }
 
