@@ -481,6 +481,7 @@ static int nl80211_wait(const char *family, const char *group, int cmd)
 {
 	struct nl80211_event_conveyor cv = { .wait = cmd };
 	struct nl_cb *cb;
+	int err = 0;
 
 	if (nl80211_subscribe(family, group))
 		return -ENOENT;
@@ -490,15 +491,16 @@ static int nl80211_wait(const char *family, const char *group, int cmd)
  	if (!cb)
 		return -ENOMEM;
 
+	nl_cb_err(cb,                  NL_CB_CUSTOM, nl80211_msg_error,      &err);
 	nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, nl80211_wait_seq_check, NULL);
 	nl_cb_set(cb, NL_CB_VALID,     NL_CB_CUSTOM, nl80211_wait_cb,        &cv );
 
-	while (!cv.recv)
+	while (!cv.recv && !err)
 		nl_recvmsgs(nls->nl_sock, cb);
 
 	nl_cb_put(cb);
 
-	return 0;
+	return err;
 }
 
 
