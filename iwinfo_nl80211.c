@@ -369,10 +369,10 @@ nla_put_failure:
 	return NULL;
 }
 
-static struct nl80211_msg_conveyor * nl80211_send(
-	struct nl80211_msg_conveyor *cv,
-	int (*cb_func)(struct nl_msg *, void *), void *cb_arg
-) {
+static int nl80211_send(struct nl80211_msg_conveyor *cv,
+                        int (*cb_func)(struct nl_msg *, void *),
+                        void *cb_arg)
+{
 	static struct nl80211_msg_conveyor rcv;
 	int err = 1;
 
@@ -381,8 +381,10 @@ static struct nl80211_msg_conveyor * nl80211_send(
 	else
 		nl_cb_set(cv->cb, NL_CB_VALID, NL_CB_CUSTOM, nl80211_msg_response, &rcv);
 
-	if (nl_send_auto_complete(nls->nl_sock, cv->msg) < 0)
-		goto err;
+	err = nl_send_auto_complete(nls->nl_sock, cv->msg);
+
+	if (err < 0)
+		goto out;
 
 	nl_cb_err(cv->cb,               NL_CB_CUSTOM, nl80211_msg_error,  &err);
 	nl_cb_set(cv->cb, NL_CB_FINISH, NL_CB_CUSTOM, nl80211_msg_finish, &err);
@@ -391,13 +393,8 @@ static struct nl80211_msg_conveyor * nl80211_send(
 	while (err > 0)
 		nl_recvmsgs(nls->nl_sock, cv->cb);
 
-	return &rcv;
-
-err:
-	nl_cb_put(cv->cb);
-	nlmsg_free(cv->msg);
-
-	return NULL;
+out:
+	return err;
 }
 
 static struct nlattr ** nl80211_parse(struct nl_msg *msg)
