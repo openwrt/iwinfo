@@ -2367,37 +2367,44 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 	int bands_remain, freqs_remain;
 
 	struct nl80211_array_buf *arr = arg;
-	struct iwinfo_freqlist_entry *e = arr->buf;
+	struct iwinfo_freqlist_entry *e;
 
 	struct nlattr **attr = nl80211_parse(msg);
 	struct nlattr *bands[NL80211_BAND_ATTR_MAX + 1];
 	struct nlattr *freqs[NL80211_FREQUENCY_ATTR_MAX + 1];
 	struct nlattr *band, *freq;
 
-	nla_for_each_nested(band, attr[NL80211_ATTR_WIPHY_BANDS], bands_remain)
-	{
-		nla_parse(bands, NL80211_BAND_ATTR_MAX,
-		          nla_data(band), nla_len(band), NULL);
+	e = arr->buf;
+	e += arr->count;
 
-		nla_for_each_nested(freq, bands[NL80211_BAND_ATTR_FREQS], freqs_remain)
+	if (attr[NL80211_ATTR_WIPHY_BANDS]) {
+		nla_for_each_nested(band, attr[NL80211_ATTR_WIPHY_BANDS], bands_remain)
 		{
-			nla_parse(freqs, NL80211_FREQUENCY_ATTR_MAX,
-			          nla_data(freq), nla_len(freq), NULL);
+			nla_parse(bands, NL80211_BAND_ATTR_MAX,
+				  nla_data(band), nla_len(band), NULL);
 
-			if (!freqs[NL80211_FREQUENCY_ATTR_FREQ] ||
-			    freqs[NL80211_FREQUENCY_ATTR_DISABLED])
-				continue;
+			if (bands[NL80211_BAND_ATTR_FREQS]) {
+				nla_for_each_nested(freq, bands[NL80211_BAND_ATTR_FREQS], freqs_remain)
+				{
+					nla_parse(freqs, NL80211_FREQUENCY_ATTR_MAX,
+						  nla_data(freq), nla_len(freq), NULL);
 
-			e->mhz = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
-			e->channel = nl80211_freq2channel(e->mhz);
+					if (!freqs[NL80211_FREQUENCY_ATTR_FREQ] ||
+					    freqs[NL80211_FREQUENCY_ATTR_DISABLED])
+						continue;
 
-			e->restricted = (
-				freqs[NL80211_FREQUENCY_ATTR_NO_IR] &&
-				!freqs[NL80211_FREQUENCY_ATTR_RADAR]
-			) ? 1 : 0;
+					e->mhz = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
+					e->channel = nl80211_freq2channel(e->mhz);
 
-			e++;
-			arr->count++;
+					e->restricted = (
+						freqs[NL80211_FREQUENCY_ATTR_NO_IR] &&
+						!freqs[NL80211_FREQUENCY_ATTR_RADAR]
+					) ? 1 : 0;
+
+					e++;
+					arr->count++;
+				}
+			}
 		}
 	}
 
