@@ -2401,6 +2401,19 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 						!freqs[NL80211_FREQUENCY_ATTR_RADAR]
 					) ? 1 : 0;
 
+					if (freqs[NL80211_FREQUENCY_ATTR_NO_HT40_MINUS])
+						e->flags |= IWINFO_FREQ_NO_HT40MINUS;
+					if (freqs[NL80211_FREQUENCY_ATTR_NO_HT40_PLUS])
+						e->flags |= IWINFO_FREQ_NO_HT40PLUS;
+					if (freqs[NL80211_FREQUENCY_ATTR_NO_80MHZ])
+						e->flags |= IWINFO_FREQ_NO_80MHZ;
+					if (freqs[NL80211_FREQUENCY_ATTR_NO_160MHZ])
+						e->flags |= IWINFO_FREQ_NO_160MHZ;
+					if (freqs[NL80211_FREQUENCY_ATTR_NO_20MHZ])
+						e->flags |= IWINFO_FREQ_NO_20MHZ;
+					if (freqs[NL80211_FREQUENCY_ATTR_NO_10MHZ])
+						e->flags |= IWINFO_FREQ_NO_10MHZ;
+
 					e++;
 					arr->count++;
 				}
