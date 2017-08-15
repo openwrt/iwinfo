@@ -48,6 +48,13 @@
 #define IWINFO_AUTH_SHARED   (1 << 1)
 #define IWINFO_AUTH_COUNT    2
 
+#define IWINFO_FREQ_NO_10MHZ		(1 << 0)
+#define IWINFO_FREQ_NO_20MHZ		(1 << 1)
+#define IWINFO_FREQ_NO_HT40PLUS		(1 << 2)
+#define IWINFO_FREQ_NO_HT40MINUS	(1 << 3)
+#define IWINFO_FREQ_NO_80MHZ		(1 << 4)
+#define IWINFO_FREQ_NO_160MHZ		(1 << 5)
+
 extern const char *IWINFO_CIPHER_NAMES[IWINFO_CIPHER_COUNT];
 extern const char *IWINFO_KMGMT_NAMES[IWINFO_KMGMT_COUNT];
 extern const char *IWINFO_AUTH_NAMES[IWINFO_AUTH_COUNT];
@@ -126,6 +133,7 @@ struct iwinfo_freqlist_entry {
 	uint8_t channel;
 	uint32_t mhz;
 	uint8_t restricted;
+	uint32_t flags;
 };
 
 struct iwinfo_crypto_entry {
