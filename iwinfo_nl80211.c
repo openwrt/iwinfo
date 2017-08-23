@@ -425,6 +425,30 @@ static struct nlattr ** nl80211_parse(struct nl_msg *msg)
 	return attr;
 }
 
+static int nl80211_get_protocol_features_cb(struct nl_msg *msg, void *arg)
+{
+	uint32_t *features = arg;
+	struct nlattr **attr = nl80211_parse(msg);
+
+	if (attr[NL80211_ATTR_PROTOCOL_FEATURES])
+		*features = nla_get_u32(attr[NL80211_ATTR_PROTOCOL_FEATURES]);
+
+	return NL_SKIP;
+}
+
+static int nl80211_get_protocol_features(const char *ifname)
+{
+	struct nl80211_msg_conveyor *req;
+	uint32_t features = 0;
+
+	req = nl80211_msg(ifname, NL80211_CMD_GET_PROTOCOL_FEATURES, 0);
+	if (req) {
+		nl80211_send(req, nl80211_get_protocol_features_cb, &features);
+		nl80211_free(req);
+	}
+
+	return features;
+}
 
 static int nl80211_subscribe_cb(struct nl_msg *msg, void *arg)
 {
@@ -2426,15 +2450,25 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_freqlist(const char *ifname, char *buf, int *len)
 {
+	struct nl80211_msg_conveyor *cv;
 	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
+	uint32_t features = nl80211_get_protocol_features(ifname);
+	int flags;
 
-	if (nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
-	                    nl80211_get_freqlist_cb, &arr))
+	flags = features & NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP ? NLM_F_DUMP : 0;
+	cv = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, flags);
+	if (!cv)
+		goto out;
+
+	NLA_PUT_FLAG(cv->msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
+	if (nl80211_send(cv, nl80211_get_freqlist_cb, &arr))
 		goto out;
 
 	*len = arr.count * sizeof(struct iwinfo_freqlist_entry);
 	return 0;
 
+nla_put_failure:
+	nl80211_free(cv);
 out:
 	*len = 0;
 	return -1;
