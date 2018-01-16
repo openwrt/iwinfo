@@ -2209,8 +2209,12 @@ static int nl80211_get_scanlist_wpactl(const char *ifname, char *buf, int *len)
 	}
 
 	/* receive and parse scan results if the wait above didn't time out */
-	if (ready && nl80211_wpactl_recv(sock, reply, sizeof(reply)) > 0)
+	while (ready && nl80211_wpactl_recv(sock, reply, sizeof(reply)) > 0)
 	{
+		/* received an event notification, receive again */
+		if (reply[0] == '<')
+			continue;
+
 		nl80211_get_quality_max(ifname, &qmax);
 
 		for (line = strtok_r(reply, "\n", &pos);
@@ -2288,6 +2292,7 @@ static int nl80211_get_scanlist_wpactl(const char *ifname, char *buf, int *len)
 		}
 
 		*len = count * sizeof(struct iwinfo_scanlist_entry);
+		break;
 	}
 
 	close(sock);
