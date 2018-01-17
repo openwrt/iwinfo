@@ -48,7 +48,7 @@ struct nl80211_msg_conveyor {
 };
 
 struct nl80211_event_conveyor {
-	int wait;
+	uint32_t wait[(NL80211_CMD_MAX / 32) + !!(NL80211_CMD_MAX % 32)];
 	int recv;
 };
 

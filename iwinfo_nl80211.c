@@ -510,7 +510,7 @@ static int nl80211_wait_cb(struct nl_msg *msg, void *arg)
 	struct nl80211_event_conveyor *cv = arg;
 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
 
-	if (gnlh->cmd == cv->wait)
+	if (cv->wait[gnlh->cmd / 32] & (1 << (gnlh->cmd % 32)))
 		cv->recv = gnlh->cmd;
 
 	return NL_SKIP;
@@ -521,11 +521,13 @@ static int nl80211_wait_seq_check(struct nl_msg *msg, void *arg)
 	return NL_OK;
 }
 
-static int nl80211_wait(const char *family, const char *group, int cmd)
+static int __nl80211_wait(const char *family, const char *group, ...)
 {
-	struct nl80211_event_conveyor cv = { .wait = cmd };
+	struct nl80211_event_conveyor cv = { };
 	struct nl_cb *cb;
 	int err = 0;
+	int cmd;
+	va_list ap;
 
 	if (nl80211_subscribe(family, group))
 		return -ENOENT;
@@ -539,6 +541,13 @@ static int nl80211_wait(const char *family, const char *group, int cmd)
 	nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, nl80211_wait_seq_check, NULL);
 	nl_cb_set(cb, NL_CB_VALID,     NL_CB_CUSTOM, nl80211_wait_cb,        &cv );
 
+	va_start(ap, group);
+
+	for (cmd = va_arg(ap, int); cmd != 0; cmd = va_arg(ap, int))
+		cv.wait[cmd / 32] |= (1 << (cmd % 32));
+
+	va_end(ap);
+
 	while (!cv.recv && !err)
 		nl_recvmsgs(nls->nl_sock, cb);
 
@@ -546,6 +555,9 @@ static int nl80211_wait(const char *family, const char *group, int cmd)
 
 	return err;
 }
+
+#define nl80211_wait(family, group, ...) \
+	__nl80211_wait(family, group, __VA_ARGS__, 0)
 
 
 static int nl80211_freq2channel(int freq)
