@@ -2103,7 +2103,8 @@ static int nl80211_get_scanlist_nl(const char *ifname, char *buf, int *len)
 	if (nl80211_request(ifname, NL80211_CMD_TRIGGER_SCAN, 0, NULL, NULL))
 		goto out;
 
-	if (nl80211_wait("nl80211", "scan", NL80211_CMD_NEW_SCAN_RESULTS))
+	if (nl80211_wait("nl80211", "scan",
+	                 NL80211_CMD_NEW_SCAN_RESULTS, NL80211_CMD_SCAN_ABORTED))
 		goto out;
 
 	if (nl80211_request(ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP,
