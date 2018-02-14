@@ -700,10 +700,13 @@ static void print_assoclist(const struct iwinfo_ops *iw, const char *ifname)
 			e->rx_packets
 		);
 
-		printf("	TX: %-38s  %8d Pkts.\n\n",
+		printf("	TX: %-38s  %8d Pkts.\n",
 			format_assocrate(&e->tx_rate),
 			e->tx_packets
 		);
+
+		printf("	expected throughput: %s\n\n",
+			format_rate(e->thr));
 	}
 }
 

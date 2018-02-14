@@ -1701,6 +1701,7 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_STA_INFO_T_OFFSET]      = { .type = NLA_U64    },
 		[NL80211_STA_INFO_STA_FLAGS] =
 			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
+		[NL80211_STA_INFO_EXPECTED_THROUGHPUT]   = { .type = NLA_U32    },
 	};
 
 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
@@ -1757,6 +1758,9 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 
 		if (sinfo[NL80211_STA_INFO_T_OFFSET])
 			e->t_offset = nla_get_u64(sinfo[NL80211_STA_INFO_T_OFFSET]);
+
+		if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT])
+			e->thr = nla_get_u32(sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]);
 
 		/* Station flags */
 		if (sinfo[NL80211_STA_INFO_STA_FLAGS])

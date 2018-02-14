@@ -122,6 +122,7 @@ struct iwinfo_assoclist_entry {
 	uint8_t is_wme:1;
 	uint8_t is_mfp:1;
 	uint8_t is_tdls:1;
+	uint32_t thr;
 };
 
 struct iwinfo_txpwrlist_entry {

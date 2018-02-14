@@ -328,6 +328,11 @@ static int iwinfo_L_assoclist(lua_State *L, int (*func)(const char *, char *, in
 			set_rateinfo(L, &e->rx_rate, true);
 			set_rateinfo(L, &e->tx_rate, false);
 
+			if (e->thr) {
+				lua_pushnumber(L, e->thr);
+				lua_setfield(L, -2, "expected_throughput");
+			}
+
 			lua_setfield(L, -2, macstr);
 		}
 	}
