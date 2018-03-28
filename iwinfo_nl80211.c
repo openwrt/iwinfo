@@ -1279,7 +1279,8 @@ static int nl80211_fill_signal_cb(struct nl_msg *msg, void *arg)
 			if (sinfo[NL80211_STA_INFO_SIGNAL])
 			{
 				dbm = nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]);
-				rr->rssi = rr->rssi ? (int8_t)((rr->rssi + dbm) / 2) : dbm;
+				rr->rssi = (rr->rssi * rr->rssi_samples + dbm) / (rr->rssi_samples + 1);
+				rr->rssi_samples++;
 			}
 
 			if (sinfo[NL80211_STA_INFO_TX_BITRATE])
@@ -1291,8 +1292,8 @@ static int nl80211_fill_signal_cb(struct nl_msg *msg, void *arg)
 					if (rinfo[NL80211_RATE_INFO_BITRATE])
 					{
 						mbit = nla_get_u16(rinfo[NL80211_RATE_INFO_BITRATE]);
-						rr->rate = rr->rate
-							? (int16_t)((rr->rate + mbit) / 2) : mbit;
+						rr->rate = (rr->rate * rr->rate_samples + mbit) / (rr->rate_samples + 1);
+						rr->rate_samples++;
 					}
 				}
 			}
@@ -1307,8 +1308,7 @@ static void nl80211_fill_signal(const char *ifname, struct nl80211_rssi_rate *r)
 	DIR *d;
 	struct dirent *de;
 
-	r->rssi = 0;
-	r->rate = 0;
+	memset(r, 0, sizeof(*r));
 
 	if ((d = opendir("/sys/class/net")) != NULL)
 	{
@@ -1333,7 +1333,7 @@ static int nl80211_get_bitrate(const char *ifname, int *buf)
 
 	nl80211_fill_signal(ifname, &rr);
 
-	if (rr.rate)
+	if (rr.rate_samples)
 	{
 		*buf = (rr.rate * 100);
 		return 0;
@@ -1348,7 +1348,7 @@ static int nl80211_get_signal(const char *ifname, int *buf)
 
 	nl80211_fill_signal(ifname, &rr);
 
-	if (rr.rssi)
+	if (rr.rssi_samples)
 	{
 		*buf = rr.rssi;
 		return 0;

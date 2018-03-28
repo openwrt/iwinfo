@@ -59,7 +59,9 @@ struct nl80211_group_conveyor {
 
 struct nl80211_rssi_rate {
 	int16_t rate;
+	int rate_samples;
 	int8_t  rssi;
+	int rssi_samples;
 };
 
 struct nl80211_array_buf {
