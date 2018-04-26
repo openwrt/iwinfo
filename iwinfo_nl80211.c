@@ -2223,6 +2223,12 @@ static int nl80211_get_scanlist_wpactl(const char *ifname, char *buf, int *len)
 			/* is another unrelated event, retry */
 			tries--;
 		}
+
+		/* got a failure reply */
+		else if (!strcmp(reply, "FAIL-BUSY\n"))
+		{
+			break;
+		}
 	}
 
 	/* receive and parse scan results if the wait above didn't time out */
