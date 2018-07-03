@@ -128,6 +128,16 @@ struct iwinfo_assoclist_entry {
 	uint32_t thr;
 };
 
+struct iwinfo_survey_entry {
+	uint64_t active_time;
+	uint64_t busy_time;
+	uint64_t busy_time_ext;
+	uint64_t rxtime;
+	uint64_t txtime;
+	uint32_t mhz;
+	uint8_t noise;
+};
+
 struct iwinfo_txpwrlist_entry {
 	uint8_t  dbm;
 	uint16_t mw;
@@ -223,6 +233,7 @@ struct iwinfo_ops {
 	int (*scanlist)(const char *, char *, int *);
 	int (*freqlist)(const char *, char *, int *);
 	int (*countrylist)(const char *, char *, int *);
+	int (*survey)(const char *, char *, int *);
 	int (*lookup_phy)(const char *, char *);
 	void (*close)(void);
 };

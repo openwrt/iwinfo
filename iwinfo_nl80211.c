@@ -1678,6 +1678,59 @@ static void nl80211_parse_rateinfo(struct nlattr **ri,
 	re->is_40mhz = (re->mhz == 40);
 }
 
+static int nl80211_get_survey_cb(struct nl_msg *msg, void *arg)
+{
+	struct nl80211_array_buf *arr = arg;
+	struct iwinfo_survey_entry *e = arr->buf;
+	struct nlattr **attr = nl80211_parse(msg);
+	struct nlattr *sinfo[NL80211_SURVEY_INFO_MAX + 1];
+	int rc;
+
+	static struct nla_policy survey_policy[NL80211_SURVEY_INFO_MAX + 1] = {
+		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
+		[NL80211_SURVEY_INFO_NOISE]  = { .type = NLA_U8     },
+		[NL80211_SURVEY_INFO_TIME] = { .type = NLA_U64   },
+		[NL80211_SURVEY_INFO_TIME_BUSY] = { .type = NLA_U64   },
+		[NL80211_SURVEY_INFO_TIME_EXT_BUSY] = { .type = NLA_U64   },
+		[NL80211_SURVEY_INFO_TIME_RX] = { .type = NLA_U64   },
+		[NL80211_SURVEY_INFO_TIME_TX] = { .type = NLA_U64   },
+	};
+
+	rc = nla_parse_nested(sinfo, NL80211_SURVEY_INFO_MAX,
+				attr[NL80211_ATTR_SURVEY_INFO],
+				survey_policy);
+	if (rc)
+		return NL_SKIP;
+
+	/* advance to end of array */
+	e += arr->count;
+	memset(e, 0, sizeof(*e));
+
+	if (sinfo[NL80211_SURVEY_INFO_FREQUENCY])
+		e->mhz = nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]);
+
+	if (sinfo[NL80211_SURVEY_INFO_NOISE])
+		e->noise = nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]);
+
+	if (sinfo[NL80211_SURVEY_INFO_TIME])
+		e->active_time = nla_get_u64(sinfo[NL80211_SURVEY_INFO_TIME]);
+
+	if (sinfo[NL80211_SURVEY_INFO_TIME_BUSY])
+		e->busy_time = nla_get_u64(sinfo[NL80211_SURVEY_INFO_TIME_BUSY]);
+
+	if (sinfo[NL80211_SURVEY_INFO_TIME_EXT_BUSY])
+		e->busy_time_ext = nla_get_u64(sinfo[NL80211_SURVEY_INFO_TIME_EXT_BUSY]);
+
+	if (sinfo[NL80211_SURVEY_INFO_TIME_RX])
+		e->rxtime = nla_get_u64(sinfo[NL80211_SURVEY_INFO_TIME_RX]);
+
+	if (sinfo[NL80211_SURVEY_INFO_TIME_TX])
+		e->txtime = nla_get_u64(sinfo[NL80211_SURVEY_INFO_TIME_TX]);
+
+	arr->count++;
+	return NL_SKIP;
+}
+
 static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 {
 	struct nl80211_array_buf *arr = arg;
@@ -1810,6 +1863,21 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 	arr->count++;
 
 	return NL_SKIP;
+}
+
+static int nl80211_get_survey(const char *ifname, char *buf, int *len)
+{
+	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
+	int rc;
+
+	rc = nl80211_request(ifname, NL80211_CMD_GET_SURVEY,
+			NLM_F_DUMP, nl80211_get_survey_cb, &arr);
+	if (!rc)
+		*len = (arr.count * sizeof(struct iwinfo_survey_entry));
+	else
+		*len = 0;
+
+	return 0;
 }
 
 static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
@@ -2862,6 +2930,7 @@ const struct iwinfo_ops nl80211_ops = {
 	.scanlist         = nl80211_get_scanlist,
 	.freqlist         = nl80211_get_freqlist,
 	.countrylist      = nl80211_get_countrylist,
+	.survey           = nl80211_get_survey,
 	.lookup_phy       = nl80211_lookup_phyname,
 	.close            = nl80211_close
 };
