@@ -105,10 +105,13 @@ struct iwinfo_rate_entry {
 struct iwinfo_assoclist_entry {
 	uint8_t	mac[6];
 	int8_t signal;
+	int8_t signal_avg;
 	int8_t noise;
 	uint32_t inactive;
+	uint32_t connected_time;
 	uint32_t rx_packets;
 	uint32_t tx_packets;
+	uint64_t rx_drop_misc;
 	struct iwinfo_rate_entry rx_rate;
 	struct iwinfo_rate_entry tx_rate;
 	uint32_t rx_bytes;

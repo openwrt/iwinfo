@@ -1694,10 +1694,13 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_STA_INFO_RX_BITRATE]    = { .type = NLA_NESTED },
 		[NL80211_STA_INFO_TX_BITRATE]    = { .type = NLA_NESTED },
 		[NL80211_STA_INFO_SIGNAL]        = { .type = NLA_U8     },
+		[NL80211_STA_INFO_SIGNAL_AVG]    = { .type = NLA_U8     },
 		[NL80211_STA_INFO_RX_BYTES]      = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_BYTES]      = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_RETRIES]    = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_FAILED]     = { .type = NLA_U32    },
+		[NL80211_STA_INFO_CONNECTED_TIME]= { .type = NLA_U32    },
+		[NL80211_STA_INFO_RX_DROP_MISC]  = { .type = NLA_U64    },
 		[NL80211_STA_INFO_T_OFFSET]      = { .type = NLA_U64    },
 		[NL80211_STA_INFO_STA_FLAGS] =
 			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
@@ -1725,8 +1728,14 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		if (sinfo[NL80211_STA_INFO_SIGNAL])
 			e->signal = nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]);
 
+		if (sinfo[NL80211_STA_INFO_SIGNAL_AVG])
+			e->signal_avg = nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL_AVG]);
+
 		if (sinfo[NL80211_STA_INFO_INACTIVE_TIME])
 			e->inactive = nla_get_u32(sinfo[NL80211_STA_INFO_INACTIVE_TIME]);
+
+		if (sinfo[NL80211_STA_INFO_CONNECTED_TIME])
+			e->connected_time = nla_get_u32(sinfo[NL80211_STA_INFO_CONNECTED_TIME]);
 
 		if (sinfo[NL80211_STA_INFO_RX_PACKETS])
 			e->rx_packets = nla_get_u32(sinfo[NL80211_STA_INFO_RX_PACKETS]);
@@ -1758,6 +1767,9 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 
 		if (sinfo[NL80211_STA_INFO_T_OFFSET])
 			e->t_offset = nla_get_u64(sinfo[NL80211_STA_INFO_T_OFFSET]);
+
+		if (sinfo[NL80211_STA_INFO_RX_DROP_MISC])
+			e->rx_drop_misc = nla_get_u64(sinfo[NL80211_STA_INFO_RX_DROP_MISC]);
 
 		if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT])
 			e->thr = nla_get_u32(sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]);
