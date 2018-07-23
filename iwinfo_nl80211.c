@@ -1026,6 +1026,20 @@ struct nl80211_ssid_bssid {
 	unsigned char bssid[7];
 };
 
+static int nl80211_get_macaddr_cb(struct nl_msg *msg, void *arg)
+{
+	struct nl80211_ssid_bssid *sb = arg;
+	struct nlattr **tb = nl80211_parse(msg);
+
+	if (tb[NL80211_ATTR_MAC]) {
+		sb->bssid[0] = 1;
+		memcpy(sb->bssid + 1, nla_data(tb[NL80211_ATTR_MAC]),
+		       sizeof(sb->bssid) - 1);
+	}
+
+	return NL_SKIP;
+}
+
 static int nl80211_get_ssid_bssid_cb(struct nl_msg *msg, void *arg)
 {
 	int ielen;
@@ -1109,11 +1123,17 @@ static int nl80211_get_bssid(const char *ifname, char *buf)
 	char *res, bssid[sizeof("FF:FF:FF:FF:FF:FF\0")];
 	struct nl80211_ssid_bssid sb = { };
 
-	/* try to find bssid from scan dump results */
 	res = nl80211_phy2ifname(ifname);
 
-	nl80211_request(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP,
-	                nl80211_get_ssid_bssid_cb, &sb);
+	/* try to obtain mac address via NL80211_CMD_GET_INTERFACE */
+	nl80211_request(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0,
+	                nl80211_get_macaddr_cb, &sb);
+
+	/* failed, try to find bssid from scan dump results */
+	if (sb.bssid[0] == 0)
+		nl80211_request(res ? res : ifname,
+		                NL80211_CMD_GET_SCAN, NLM_F_DUMP,
+		                nl80211_get_ssid_bssid_cb, &sb);
 
 	/* failed, try to find mac from hostapd info */
 	if ((sb.bssid[0] == 0) &&
