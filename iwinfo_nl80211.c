@@ -2074,9 +2074,12 @@ static void nl80211_get_scanlist_ie(struct nlattr **bss,
 		switch (ie[0])
 		{
 		case 0: /* SSID */
-			len = min(ie[1], IWINFO_ESSID_MAX_SIZE);
-			memcpy(e->ssid, ie + 2, len);
-			e->ssid[len] = 0;
+		case 114: /* Mesh ID */
+			if (e->ssid[0] == 0) {
+				len = min(ie[1], IWINFO_ESSID_MAX_SIZE);
+				memcpy(e->ssid, ie + 2, len);
+				e->ssid[len] = 0;
+			}
 			break;
 
 		case 48: /* RSN */
