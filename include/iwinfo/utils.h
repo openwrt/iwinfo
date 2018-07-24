@@ -22,6 +22,7 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <uci.h>
+#include <libubus.h>
 
 #include "iwinfo.h"
 
@@ -57,5 +58,8 @@ void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 
 struct uci_section *iwinfo_uci_get_radio(const char *name, const char *type);
 void iwinfo_uci_free(void);
+
+int iwinfo_ubus_query(const char *ifname, const char *field,
+                      char *buf, size_t len);
 
 #endif

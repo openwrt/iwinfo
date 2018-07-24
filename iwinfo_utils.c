@@ -404,3 +404,96 @@ void iwinfo_uci_free(void)
 	uci_free_context(uci_ctx);
 	uci_ctx = NULL;
 }
+
+
+struct iwinfo_ubus_query_state {
+	const char *ifname;
+	const char *field;
+	size_t len;
+	char *buf;
+};
+
+static void iwinfo_ubus_query_cb(struct ubus_request *req, int type,
+                                 struct blob_attr *msg)
+{
+	struct iwinfo_ubus_query_state *st = req->priv;
+
+	struct blobmsg_policy pol1[2] = {
+		{ "ifname",  BLOBMSG_TYPE_STRING },
+		{ "config",  BLOBMSG_TYPE_TABLE }
+	};
+
+	struct blobmsg_policy pol2 = { st->field, BLOBMSG_TYPE_STRING };
+	struct blob_attr *cur, *cur2, *cur3, *cfg[2], *res;
+	int rem, rem2, rem3;
+
+	blobmsg_for_each_attr(cur, msg, rem) {
+		if (blobmsg_type(cur) != BLOBMSG_TYPE_TABLE)
+			continue;
+
+		blobmsg_for_each_attr(cur2, cur, rem2) {
+			if (blobmsg_type(cur2) != BLOBMSG_TYPE_ARRAY)
+				continue;
+
+			if (strcmp(blobmsg_name(cur2), "interfaces"))
+				continue;
+
+			blobmsg_for_each_attr(cur3, cur2, rem3) {
+				blobmsg_parse(pol1, sizeof(pol1) / sizeof(pol1[0]), cfg,
+				              blobmsg_data(cur3), blobmsg_len(cur3));
+
+				if (!cfg[0] || !cfg[1] ||
+				    strcmp(blobmsg_get_string(cfg[0]), st->ifname))
+					continue;
+
+				blobmsg_parse(&pol2, 1, &res,
+				              blobmsg_data(cfg[1]), blobmsg_len(cfg[1]));
+
+				if (!res)
+					continue;
+
+				strncpy(st->buf, blobmsg_get_string(res), st->len);
+				return;
+			}
+		}
+	}
+}
+
+int iwinfo_ubus_query(const char *ifname, const char *field,
+                      char *buf, size_t len)
+{
+	struct iwinfo_ubus_query_state st = {
+		.ifname = ifname,
+		.field = field,
+		.buf = buf,
+		.len = len
+	};
+
+	struct ubus_context *ctx = NULL;
+	struct blob_buf b = { };
+	int rv = -1;
+	uint32_t id;
+
+	blob_buf_init(&b, 0);
+
+	ctx = ubus_connect(NULL);
+
+	if (!ctx)
+		goto out;
+
+	if (ubus_lookup_id(ctx, "network.wireless", &id))
+		goto out;
+
+	if (ubus_invoke(ctx, id, "status", b.head, iwinfo_ubus_query_cb, &st, 250))
+		goto out;
+
+	rv = 0;
+
+out:
+	if (ctx)
+		ubus_free(ctx);
+
+	blob_buf_free(&b);
+
+	return rv;
+}
