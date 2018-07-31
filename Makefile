@@ -1,6 +1,6 @@
 IWINFO_BACKENDS    = $(BACKENDS)
-IWINFO_CFLAGS      = $(CFLAGS) -std=gnu99 -fstrict-aliasing -ffunction-sections -fdata-sections -flto -Iinclude
-IWINFO_LDFLAGS     = -Wl,-gc-sections -flto -luci -lubox -lubus
+IWINFO_CFLAGS      = $(CFLAGS) -std=gnu99 -fstrict-aliasing -Iinclude
+IWINFO_LDFLAGS     = -luci -lubox -lubus
 
 IWINFO_LIB         = libiwinfo.so
 IWINFO_LIB_LDFLAGS = $(LDFLAGS) -shared
