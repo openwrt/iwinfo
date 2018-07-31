@@ -18,6 +18,9 @@
  * This code is based on the wlc.c utility published by OpenWrt.org .
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "iwinfo.h"
 #include "api/broadcom.h"
 
@@ -702,15 +705,19 @@ static int wl_get_txpower_offset(const char *ifname, int *buf)
 {
 	FILE *p;
 	char off[8];
+	struct stat s;
 
 	*buf = 0;
 
-	if ((p = popen("/usr/sbin/nvram get opo", "r")) != NULL)
+	if (!stat("/usr/sbin/nvram", &s) && (s.st_mode & S_IXUSR))
 	{
-		if (fread(off, 1, sizeof(off), p))
-			*buf = strtoul(off, NULL, 16);
+		if ((p = popen("/usr/sbin/nvram get opo", "r")) != NULL)
+		{
+			if (fread(off, 1, sizeof(off), p))
+				*buf = strtoul(off, NULL, 16);
 
-		pclose(p);
+			pclose(p);
+		}
 	}
 
 	return 0;
