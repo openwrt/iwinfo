@@ -126,6 +126,12 @@ struct iwinfo_assoclist_entry {
 	uint8_t is_mfp:1;
 	uint8_t is_tdls:1;
 	uint32_t thr;
+	uint16_t llid;
+	uint16_t plid;
+	char plink_state[16];
+	char local_ps[16];
+	char peer_ps[16];
+	char nonpeer_ps[16];
 };
 
 struct iwinfo_survey_entry {

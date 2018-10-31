@@ -1756,6 +1756,57 @@ static int nl80211_get_survey_cb(struct nl_msg *msg, void *arg)
 	return NL_SKIP;
 }
 
+
+static void plink_state_to_str(char *dst, unsigned state)
+{
+	switch (state) {
+	case NL80211_PLINK_LISTEN:
+		strcpy(dst, "LISTEN");
+		break;
+	case NL80211_PLINK_OPN_SNT:
+		strcpy(dst, "OPN_SNT");
+		break;
+	case NL80211_PLINK_OPN_RCVD:
+		strcpy(dst, "OPN_RCVD");
+		break;
+	case NL80211_PLINK_CNF_RCVD:
+		strcpy(dst, "CNF_RCVD");
+		break;
+	case NL80211_PLINK_ESTAB:
+		strcpy(dst, "ESTAB");
+		break;
+	case NL80211_PLINK_HOLDING:
+		strcpy(dst, "HOLDING");
+		break;
+	case NL80211_PLINK_BLOCKED:
+		strcpy(dst, "BLOCKED");
+		break;
+	default:
+		strcpy(dst, "UNKNOWN");
+		break;
+	}
+}
+
+static void power_mode_to_str(char *dst, struct nlattr *a)
+{
+	enum nl80211_mesh_power_mode pm = nla_get_u32(a);
+
+	switch (pm) {
+	case NL80211_MESH_POWER_ACTIVE:
+		strcpy(dst, "ACTIVE");
+		break;
+	case NL80211_MESH_POWER_LIGHT_SLEEP:
+		strcpy(dst, "LIGHT SLEEP");
+		break;
+	case NL80211_MESH_POWER_DEEP_SLEEP:
+		strcpy(dst, "DEEP SLEEP");
+		break;
+	default:
+		strcpy(dst, "UNKNOWN");
+		break;
+	}
+}
+
 static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 {
 	struct nl80211_array_buf *arr = arg;
@@ -1783,6 +1834,13 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_STA_INFO_STA_FLAGS] =
 			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
 		[NL80211_STA_INFO_EXPECTED_THROUGHPUT]   = { .type = NLA_U32    },
+		/* mesh */
+		[NL80211_STA_INFO_LLID]          = { .type = NLA_U16	},
+		[NL80211_STA_INFO_PLID]          = { .type = NLA_U16	},
+		[NL80211_STA_INFO_PLINK_STATE]   = { .type = NLA_U8	},
+		[NL80211_STA_INFO_LOCAL_PM]      = { .type = NLA_U32	},
+		[NL80211_STA_INFO_PEER_PM]       = { .type = NLA_U32	},
+		[NL80211_STA_INFO_NONPEER_PM]    = { .type = NLA_U32	},
 	};
 
 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
@@ -1851,6 +1909,24 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 
 		if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT])
 			e->thr = nla_get_u32(sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]);
+
+		/* mesh */
+		if (sinfo[NL80211_STA_INFO_LLID])
+			e->llid = nla_get_u16(sinfo[NL80211_STA_INFO_LLID]);
+
+		if (sinfo[NL80211_STA_INFO_PLID])
+			e->plid = nla_get_u16(sinfo[NL80211_STA_INFO_PLID]);
+
+		if (sinfo[NL80211_STA_INFO_PLINK_STATE])
+			plink_state_to_str(e->plink_state,
+				nla_get_u8(sinfo[NL80211_STA_INFO_PLINK_STATE]));
+
+		if (sinfo[NL80211_STA_INFO_LOCAL_PM])
+			power_mode_to_str(e->local_ps, sinfo[NL80211_STA_INFO_LOCAL_PM]);
+		if (sinfo[NL80211_STA_INFO_PEER_PM])
+			power_mode_to_str(e->peer_ps, sinfo[NL80211_STA_INFO_PEER_PM]);
+		if (sinfo[NL80211_STA_INFO_NONPEER_PM])
+			power_mode_to_str(e->nonpeer_ps, sinfo[NL80211_STA_INFO_NONPEER_PM]);
 
 		/* Station flags */
 		if (sinfo[NL80211_STA_INFO_STA_FLAGS])
