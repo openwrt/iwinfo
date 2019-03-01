@@ -237,17 +237,37 @@ int iwinfo_hardware_id_from_mtd(struct iwinfo_hardware_id *id)
 			}
 
 			/* Rt3xxx SoC */
-			else if ((bc[off] == 0x3352) || (bc[off] == 0x5233) ||
+			else if ((bc[off] == 0x3050) || (bc[off] == 0x5030) ||
+			         (bc[off] == 0x3051) || (bc[off] == 0x5130) ||
+			         (bc[off] == 0x3052) || (bc[off] == 0x5230) ||
 			         (bc[off] == 0x3350) || (bc[off] == 0x5033) ||
-			         (bc[off] == 0x3050) || (bc[off] == 0x5030) ||
-			         (bc[off] == 0x3052) || (bc[off] == 0x5230))
+			         (bc[off] == 0x3352) || (bc[off] == 0x5233) ||
+			         (bc[off] == 0x3662) || (bc[off] == 0x6236) ||
+			         (bc[off] == 0x3883) || (bc[off] == 0x8338) ||
+			         (bc[off] == 0x5350) || (bc[off] == 0x5053))
 			{
 				/* vendor: RaLink */
 				id->vendor_id = 0x1814;
 				id->subsystem_vendor_id = 0x1814;
 
 				/* device */
-				if ((bc[off] & 0xf0) == 0x30)
+				if (((bc[off] & 0xf0) == 0x30) ||
+				    ((bc[off] & 0xff) == 0x53))
+					id->device_id = (bc[off] >> 8) | (bc[off] & 0x00ff) << 8;
+				else
+					id->device_id = bc[off];
+
+				/* subsystem from EEPROM_NIC_CONF0_RF_TYPE */
+				id->subsystem_device_id = (bc[off + 0x1a] & 0x0f00) >> 8;
+			} else if ((bc[off] == 0x7620) || (bc[off] == 0x2076) ||
+			           (bc[off] == 0x7628) || (bc[off] == 0x2876) ||
+			           (bc[off] == 0x7688) || (bc[off] == 0x8876)) {
+				/* vendor: MediaTek */
+				id->vendor_id = 0x14c3;
+				id->subsystem_vendor_id = 0x14c3;
+
+				/* device */
+				if ((bc[off] & 0xff) == 0x76)
 					id->device_id = (bc[off] >> 8) | (bc[off] & 0x00ff) << 8;
 				else
 					id->device_id = bc[off];
