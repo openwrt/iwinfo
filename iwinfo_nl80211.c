@@ -568,6 +568,8 @@ static int nl80211_freq2channel(int freq)
 		return (freq - 2407) / 5;
 	else if (freq >= 4910 && freq <= 4980)
 		return (freq - 4000) / 5;
+	else if(freq >= 56160 + 2160 * 1 && freq <= 56160 + 2160 * 6)
+		return (freq - 56160) / 2160;
 	else
 		return (freq - 5000) / 5;
 }
@@ -580,6 +582,10 @@ static int nl80211_channel2freq(int channel, const char *band)
 			return 2484;
 		else if (channel < 14)
 			return (channel * 5) + 2407;
+	}
+	else if ( strcmp(band, "ad") == 0)
+	{
+		return 56160 + 2160 * channel;
 	}
 	else
 	{
@@ -2799,6 +2805,10 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 							m->ht |= IWINFO_HTMODE_VHT160;
 						}
 					}
+				}
+				else if (nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]) >= 56160)
+				{
+					m->hw |= IWINFO_80211_AD;
 				}
 				else if (!(m->hw & IWINFO_80211_AC))
 				{
