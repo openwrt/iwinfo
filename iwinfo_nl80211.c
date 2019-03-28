@@ -1207,7 +1207,7 @@ static int nl80211_get_frequency_info_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_frequency(const char *ifname, int *buf)
 {
-	char *res, channel[4], hwmode[2];
+	char *res, channel[4], hwmode[3];
 
 	/* try to find frequency from interface info */
 	res = nl80211_phy2ifname(ifname);
