@@ -43,7 +43,9 @@
 #define IWINFO_KMGMT_NONE    (1 << 0)
 #define IWINFO_KMGMT_8021x   (1 << 1)
 #define IWINFO_KMGMT_PSK     (1 << 2)
-#define IWINFO_KMGMT_COUNT   3
+#define IWINFO_KMGMT_SAE     (1 << 3)
+#define IWINFO_KMGMT_OWE     (1 << 4)
+#define IWINFO_KMGMT_COUNT   5
 
 #define IWINFO_AUTH_OPEN     (1 << 0)
 #define IWINFO_AUTH_SHARED   (1 << 1)

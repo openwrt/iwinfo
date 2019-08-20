@@ -89,6 +89,12 @@ static char * iwinfo_crypto_print_suites(int suites)
 	if (suites & IWINFO_KMGMT_8021x)
 		pos += sprintf(pos, "802.1X/");
 
+	if (suites & IWINFO_KMGMT_SAE)
+		pos += sprintf(pos, "SAE/");
+
+	if (suites & IWINFO_KMGMT_OWE)
+		pos += sprintf(pos, "OWE/");
+
 	if (!suites || (suites & IWINFO_KMGMT_NONE))
 		pos += sprintf(pos, "NONE/");
 
@@ -130,6 +136,13 @@ static char * iwinfo_crypto_desc(struct iwinfo_crypto_entry *c)
 			else if (c->wpa_version)
 			{
 				switch (c->wpa_version) {
+					case 4:
+						sprintf(desc, "WPA3 %s (%s)",
+							iwinfo_crypto_print_suites(c->auth_suites),
+							iwinfo_crypto_print_ciphers(
+								c->pair_ciphers | c->group_ciphers));
+						break;
+
 					case 3:
 						sprintf(desc, "mixed WPA/WPA2 %s (%s)",
 							iwinfo_crypto_print_suites(c->auth_suites),

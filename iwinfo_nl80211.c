@@ -1588,6 +1588,16 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 			if (strstr(wpa_key_mgmt, "EAP"))
 				c->auth_suites |= IWINFO_KMGMT_8021x;
 
+			if (strstr(wpa_key_mgmt, "SAE")){
+				c->auth_suites |= IWINFO_KMGMT_SAE;
+				c->wpa_version = 4;
+			}
+
+			if (strstr(wpa_key_mgmt, "OWE")){
+				c->auth_suites |= IWINFO_KMGMT_OWE;
+				c->wpa_version = 4;
+			}
+
 			if (strstr(wpa_key_mgmt, "NONE"))
 				c->auth_suites |= IWINFO_KMGMT_NONE;
 		}

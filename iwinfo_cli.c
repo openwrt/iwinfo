@@ -186,6 +186,12 @@ static char * format_enc_suites(int suites)
 	if (suites & IWINFO_KMGMT_8021x)
 		pos += sprintf(pos, "802.1X/");
 
+	if (suites & IWINFO_KMGMT_SAE)
+		pos += sprintf(pos, "SAE/");
+
+	if (suites & IWINFO_KMGMT_OWE)
+		pos += sprintf(pos, "OWE/");
+
 	if (!suites || (suites & IWINFO_KMGMT_NONE))
 		pos += sprintf(pos, "NONE/");
 
@@ -229,6 +235,12 @@ static char * format_encryption(struct iwinfo_crypto_entry *c)
 		else if (c->wpa_version)
 		{
 			switch (c->wpa_version) {
+				case 4:
+					snprintf(buf, sizeof(buf), "WPA3 %s (%s)",
+						format_enc_suites(c->auth_suites),
+						format_enc_ciphers(c->pair_ciphers | c->group_ciphers));
+					break;
+
 				case 3:
 					snprintf(buf, sizeof(buf), "mixed WPA/WPA2 %s (%s)",
 						format_enc_suites(c->auth_suites),
