@@ -2926,37 +2926,37 @@ static int nl80211_get_mbssid_support(const char *ifname, int *buf)
 
 static int nl80211_get_hardware_id(const char *ifname, char *buf)
 {
-	int rv = -1;
-	char *res;
+	struct iwinfo_hardware_id *id = (struct iwinfo_hardware_id *)buf;
+	char *phy, num[8], path[PATH_MAX];
+	int i;
 
-	/* Got a radioX pseudo interface, find some interface on it or create one */
-	if (!strncmp(ifname, "radio", 5))
-	{
-		/* Reuse existing interface */
-		if ((res = nl80211_phy2ifname(ifname)) != NULL)
-		{
-			rv = wext_ops.hardware_id(res, buf);
-		}
+	struct { const char *path; uint16_t *dest; } lookup[] = {
+		{ "vendor", &id->vendor_id },
+		{ "device", &id->device_id },
+		{ "subsystem_vendor", &id->subsystem_vendor_id },
+		{ "subsystem_device", &id->subsystem_device_id }
+	};
 
-		/* Need to spawn a temporary iface for finding IDs */
-		else if ((res = nl80211_ifadd(ifname)) != NULL)
-		{
-			rv = wext_ops.hardware_id(res, buf);
-			nl80211_ifdel(res);
-		}
-	}
-	else
+	memset(id, 0, sizeof(*id));
+
+	/* Try to determine the phy name from the given interface */
+	phy = nl80211_ifname2phy(ifname);
+
+	for (i = 0; i < ARRAY_SIZE(lookup); i++)
 	{
-		rv = wext_ops.hardware_id(ifname, buf);
+		snprintf(path, sizeof(path), "/sys/class/%s/%s/device/%s",
+		         phy ? "ieee80211" : "net",
+		         phy ? phy : ifname, lookup[i].path);
+
+		if (nl80211_readstr(path, num, sizeof(num)) > 0)
+			*lookup[i].dest = strtoul(num, NULL, 16);
 	}
 
 	/* Failed to obtain hardware IDs, search board config */
-	if (rv)
-	{
-		rv = iwinfo_hardware_id_from_mtd((struct iwinfo_hardware_id *)buf);
-	}
+	if (id->vendor_id == 0 || id->device_id == 0)
+		return iwinfo_hardware_id_from_mtd(id);
 
-	return rv;
+	return 0;
 }
 
 static const struct iwinfo_hardware_entry *
