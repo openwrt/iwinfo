@@ -1494,7 +1494,7 @@ static int nl80211_check_wepkey(const char *key)
 
 static int nl80211_get_encryption(const char *ifname, char *buf)
 {
-	char wpa[2], wpa_key_mgmt[16], wpa_pairwise[16], wpa_groupwise[16];
+	char wpa[2], wpa_key_mgmt[64], wpa_pairwise[16], wpa_groupwise[16];
 	char auth_algs[2], wep_key0[27], wep_key1[27], wep_key2[27], wep_key3[27];
 
 	struct iwinfo_crypto_entry *c = (struct iwinfo_crypto_entry *)buf;
