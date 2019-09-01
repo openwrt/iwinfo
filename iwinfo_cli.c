@@ -130,7 +130,7 @@ static char * format_noise(int noise)
 
 static char * format_rate(int rate)
 {
-	static char buf[14];
+	static char buf[18];
 
 	if (rate <= 0)
 		snprintf(buf, sizeof(buf), "unknown");
