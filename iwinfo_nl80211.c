@@ -2190,6 +2190,14 @@ static void nl80211_get_scancrypto(char *spec, struct iwinfo_crypto_entry *c)
 	c->enabled = 0;
 
 	for (p = strtok(spec, "[]"); p != NULL; p = strtok(NULL, "[]")) {
+		if (!strcmp(p, "WEP")) {
+			c->enabled      = 1;
+			c->auth_suites  = IWINFO_KMGMT_NONE;
+			c->auth_algs    = IWINFO_AUTH_OPEN | IWINFO_AUTH_SHARED;
+			c->pair_ciphers = IWINFO_CIPHER_WEP40 | IWINFO_CIPHER_WEP104;
+			break;
+		}
+
 		proto = strtok(p, "-");
 		suites = strtok(NULL, "]");
 
