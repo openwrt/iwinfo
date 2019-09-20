@@ -203,6 +203,8 @@ static char * format_enc_suites(int suites)
 static char * format_encryption(struct iwinfo_crypto_entry *c)
 {
 	static char buf[512];
+	char *pos = buf;
+	int i, n;
 
 	if (!c)
 	{
@@ -234,31 +236,25 @@ static char * format_encryption(struct iwinfo_crypto_entry *c)
 		/* WPA */
 		else if (c->wpa_version)
 		{
-			switch (c->wpa_version) {
-				case 4:
-					snprintf(buf, sizeof(buf), "WPA3 %s (%s)",
-						format_enc_suites(c->auth_suites),
-						format_enc_ciphers(c->pair_ciphers | c->group_ciphers));
-					break;
+			for (i = 0, n = 0; i < 3; i++)
+				if (c->wpa_version & (1 << i))
+					n++;
 
-				case 3:
-					snprintf(buf, sizeof(buf), "mixed WPA/WPA2 %s (%s)",
-						format_enc_suites(c->auth_suites),
-						format_enc_ciphers(c->pair_ciphers | c->group_ciphers));
-					break;
+			if (n > 1)
+				pos += sprintf(pos, "mixed ");
 
-				case 2:
-					snprintf(buf, sizeof(buf), "WPA2 %s (%s)",
-						format_enc_suites(c->auth_suites),
-						format_enc_ciphers(c->pair_ciphers | c->group_ciphers));
-					break;
+			for (i = 0; i < 3; i++)
+				if (c->wpa_version & (1 << i))
+					if (i)
+						pos += sprintf(pos, "WPA%d/", i + 1);
+					else
+						pos += sprintf(pos, "WPA/");
 
-				case 1:
-					snprintf(buf, sizeof(buf), "WPA %s (%s)",
-						format_enc_suites(c->auth_suites),
-						format_enc_ciphers(c->pair_ciphers | c->group_ciphers));
-					break;
-			}
+			pos--;
+
+			sprintf(pos, " %s (%s)",
+				format_enc_suites(c->auth_suites),
+				format_enc_ciphers(c->pair_ciphers | c->group_ciphers));
 		}
 		else
 		{
