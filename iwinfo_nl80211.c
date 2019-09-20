@@ -1492,8 +1492,108 @@ static int nl80211_check_wepkey(const char *key)
 	return 0;
 }
 
+static struct {
+	const char *match;
+	int version;
+	int suite;
+} wpa_key_mgmt_strings[] = {
+	{ "IEEE 802.1X/EAP", 0, IWINFO_KMGMT_8021x },
+	{ "EAP-SUITE-B-192", 4, IWINFO_KMGMT_8021x },
+	{ "EAP-SUITE-B",     4, IWINFO_KMGMT_8021x },
+	{ "EAP-SHA256",      0, IWINFO_KMGMT_8021x },
+	{ "PSK-SHA256",      0, IWINFO_KMGMT_PSK },
+	{ "NONE",            0, IWINFO_KMGMT_NONE },
+	{ "None",            0, IWINFO_KMGMT_NONE },
+	{ "PSK",             0, IWINFO_KMGMT_PSK },
+	{ "EAP",             0, IWINFO_KMGMT_8021x },
+	{ "SAE",             4, IWINFO_KMGMT_SAE },
+	{ "OWE",             4, IWINFO_KMGMT_OWE }
+};
+
+static void parse_wpa_suites(const char *str, int defversion,
+                             uint8_t *versions, uint8_t *suites)
+{
+	size_t l;
+	int i, version;
+	const char *p, *q, *m, *sep = " \t\n,-+/";
+
+	for (p = str; *p; )
+	{
+		q = p;
+
+		for (i = 0; i < ARRAY_SIZE(wpa_key_mgmt_strings); i++)
+		{
+			m = wpa_key_mgmt_strings[i].match;
+			l = strlen(m);
+
+			if (!strncmp(q, m, l) && (!q[l] || strchr(sep, q[l])))
+			{
+				if (wpa_key_mgmt_strings[i].version != 0)
+					version = wpa_key_mgmt_strings[i].version;
+				else
+					version = defversion;
+
+				*versions |= version;
+				*suites |= wpa_key_mgmt_strings[i].suite;
+
+				q += l;
+				break;
+			}
+		}
+
+		if (q == p)
+			q += strcspn(q, sep);
+
+		p = q + strspn(q, sep);
+	}
+}
+
+static struct {
+	const char *match;
+	int cipher;
+} wpa_cipher_strings[] = {
+	{ "WEP-104", IWINFO_CIPHER_WEP104 },
+	{ "WEP-40",  IWINFO_CIPHER_WEP40 },
+	{ "NONE",    IWINFO_CIPHER_NONE },
+	{ "TKIP",    IWINFO_CIPHER_TKIP },
+	{ "CCMP",    IWINFO_CIPHER_CCMP }
+};
+
+static void parse_wpa_ciphers(const char *str, uint8_t *ciphers)
+{
+	int i;
+	size_t l;
+	const char *m, *p, *q, *sep = " \t\n,-+/";
+
+	for (p = str; *p; )
+	{
+		q = p;
+
+		for (i = 0; i < ARRAY_SIZE(wpa_cipher_strings); i++)
+		{
+			m = wpa_cipher_strings[i].match;
+			l = strlen(m);
+
+			if (!strncmp(q, m, l) && (!q[l] || strchr(sep, q[l])))
+			{
+				*ciphers |= wpa_cipher_strings[i].cipher;
+
+				q += l;
+				break;
+			}
+		}
+
+		if (q == p)
+			q += strcspn(q, sep);
+
+		p = q + strspn(q, sep);
+	}
+}
+
 static int nl80211_get_encryption(const char *ifname, char *buf)
 {
+	char *p;
+	uint8_t wpa_version = 0;
 	char wpa[2], wpa_key_mgmt[64], wpa_pairwise[16], wpa_groupwise[16];
 	char auth_algs[2], wep_key0[27], wep_key1[27], wep_key2[27], wep_key3[27];
 
@@ -1508,15 +1608,8 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 		/* WEP */
 		if (!strcmp(wpa_key_mgmt, "NONE"))
 		{
-			if (strstr(wpa_pairwise, "WEP-40"))
-				c->pair_ciphers |= IWINFO_CIPHER_WEP40;
-			else if (strstr(wpa_pairwise, "WEP-104"))
-				c->pair_ciphers |= IWINFO_CIPHER_WEP104;
-
-			if (strstr(wpa_groupwise, "WEP-40"))
-				c->group_ciphers |= IWINFO_CIPHER_WEP40;
-			else if (strstr(wpa_groupwise, "WEP-104"))
-				c->group_ciphers |= IWINFO_CIPHER_WEP104;
+			parse_wpa_ciphers(wpa_pairwise, &c->pair_ciphers);
+			parse_wpa_ciphers(wpa_groupwise, &c->group_ciphers);
 
 			c->enabled      = !!(c->pair_ciphers | c->group_ciphers);
 			c->auth_suites |= IWINFO_KMGMT_NONE;
@@ -1524,42 +1617,25 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 		}
 
 		/* WPA */
-		else if (strstr(wpa_key_mgmt, "WPA"))
+		else
 		{
-			if (strstr(wpa_pairwise, "TKIP"))
-				c->pair_ciphers |= IWINFO_CIPHER_TKIP;
-			else if (strstr(wpa_pairwise, "CCMP"))
-				c->pair_ciphers |= IWINFO_CIPHER_CCMP;
-			else if (strstr(wpa_pairwise, "NONE"))
-				c->pair_ciphers |= IWINFO_CIPHER_NONE;
-			else if (strstr(wpa_pairwise, "WEP-40"))
-				c->pair_ciphers |= IWINFO_CIPHER_WEP40;
-			else if (strstr(wpa_pairwise, "WEP-104"))
-				c->pair_ciphers |= IWINFO_CIPHER_WEP104;
+			parse_wpa_ciphers(wpa_pairwise, &c->pair_ciphers);
+			parse_wpa_ciphers(wpa_groupwise, &c->group_ciphers);
 
-			if (strstr(wpa_groupwise, "TKIP"))
-				c->group_ciphers |= IWINFO_CIPHER_TKIP;
-			else if (strstr(wpa_groupwise, "CCMP"))
-				c->group_ciphers |= IWINFO_CIPHER_CCMP;
-			else if (strstr(wpa_groupwise, "NONE"))
-				c->group_ciphers |= IWINFO_CIPHER_NONE;
-			else if (strstr(wpa_groupwise, "WEP-40"))
-				c->group_ciphers |= IWINFO_CIPHER_WEP40;
-			else if (strstr(wpa_groupwise, "WEP-104"))
-				c->group_ciphers |= IWINFO_CIPHER_WEP104;
+			p = wpa_key_mgmt;
 
-			if (strstr(wpa_key_mgmt, "WPA2"))
-				c->wpa_version = 2;
-			else if (strstr(wpa_key_mgmt, "WPA"))
-				c->wpa_version = 1;
+			if (!strncmp(p, "WPA2-", 5) || !strncmp(p, "WPA2/", 5))
+			{
+				p += 5;
+				wpa_version = 2;
+			}
+			else if (!strncmp(p, "WPA-", 4))
+			{
+				p += 4;
+				wpa_version = 1;
+			}
 
-			if (strstr(wpa_key_mgmt, "PSK"))
-				c->auth_suites |= IWINFO_KMGMT_PSK;
-			else if (strstr(wpa_key_mgmt, "EAP") ||
-			         strstr(wpa_key_mgmt, "802.1X"))
-				c->auth_suites |= IWINFO_KMGMT_8021x;
-			else if (strstr(wpa_key_mgmt, "NONE"))
-				c->auth_suites |= IWINFO_KMGMT_NONE;
+			parse_wpa_suites(p, wpa_version, &c->wpa_version, &c->auth_suites);
 
 			c->enabled = !!(c->wpa_version && c->auth_suites);
 		}
@@ -1578,49 +1654,27 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 				"wep_key2",     wep_key2,     sizeof(wep_key2),
 				"wep_key3",     wep_key3,     sizeof(wep_key3)))
 	{
-		c->wpa_version = wpa[0] ? atoi(wpa) : 0;
+		c->wpa_version = 0;
 
 		if (wpa_key_mgmt[0])
 		{
-			if (strstr(wpa_key_mgmt, "PSK"))
-				c->auth_suites |= IWINFO_KMGMT_PSK;
+			for (p = strtok(wpa_key_mgmt, " \t"); p != NULL; p = strtok(NULL, " \t"))
+			{
+				if (!strncmp(p, "WPA-", 4))
+					p += 4;
 
-			if (strstr(wpa_key_mgmt, "EAP"))
-				c->auth_suites |= IWINFO_KMGMT_8021x;
-
-			if (strstr(wpa_key_mgmt, "SAE")){
-				c->auth_suites |= IWINFO_KMGMT_SAE;
-				c->wpa_version = 4;
+				parse_wpa_suites(p, atoi(wpa), &c->wpa_version, &c->auth_suites);
 			}
 
-			if (strstr(wpa_key_mgmt, "OWE")){
-				c->auth_suites |= IWINFO_KMGMT_OWE;
-				c->wpa_version = 4;
-			}
-
-			if (strstr(wpa_key_mgmt, "NONE"))
-				c->auth_suites |= IWINFO_KMGMT_NONE;
-		}
-		else
-		{
-			c->auth_suites |= IWINFO_KMGMT_PSK;
+			c->enabled = c->wpa_version ? 1 : 0;
 		}
 
 		if (wpa_pairwise[0])
-		{
-			if (strstr(wpa_pairwise, "TKIP"))
-				c->pair_ciphers |= IWINFO_CIPHER_TKIP;
-
-			if (strstr(wpa_pairwise, "CCMP"))
-				c->pair_ciphers |= IWINFO_CIPHER_CCMP;
-
-			if (strstr(wpa_pairwise, "NONE"))
-				c->pair_ciphers |= IWINFO_CIPHER_NONE;
-		}
+			parse_wpa_ciphers(wpa_pairwise, &c->pair_ciphers);
 
 		if (auth_algs[0])
 		{
-			switch(atoi(auth_algs))
+			switch (atoi(auth_algs))
 			{
 			case 1:
 				c->auth_algs |= IWINFO_AUTH_OPEN;
@@ -1636,6 +1690,7 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 				break;
 			}
 
+			c->enabled = c->auth_algs ? 1 : 0;
 			c->pair_ciphers |= nl80211_check_wepkey(wep_key0);
 			c->pair_ciphers |= nl80211_check_wepkey(wep_key1);
 			c->pair_ciphers |= nl80211_check_wepkey(wep_key2);
@@ -1643,7 +1698,6 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 		}
 
 		c->group_ciphers = c->pair_ciphers;
-		c->enabled = (c->wpa_version || c->pair_ciphers) ? 1 : 0;
 
 		return 0;
 	}
@@ -2121,53 +2175,31 @@ static int nl80211_get_txpwrlist(const char *ifname, char *buf, int *len)
 	return -1;
 }
 
-static void nl80211_get_scancrypto(const char *spec,
-	struct iwinfo_crypto_entry *c)
+static void nl80211_get_scancrypto(char *spec, struct iwinfo_crypto_entry *c)
 {
-	if (strstr(spec, "WPA") || strstr(spec, "WEP"))
-	{
+	int wpa_version = 0;
+	char *p, *proto, *suites;
+
+	c->enabled = 0;
+
+	for (p = strtok(spec, "[]"); p != NULL; p = strtok(NULL, "[]")) {
+		proto = strtok(p, "-");
+		suites = strtok(NULL, "]");
+
+		if (!proto || !suites)
+			continue;
+
+		if (!strcmp(proto, "WPA2") || !strcmp(proto, "RSN"))
+			wpa_version = 2;
+		else if (!strcmp(proto, "WPA"))
+			wpa_version = 1;
+		else
+			continue;
+
 		c->enabled = 1;
 
-		if (strstr(spec, "WPA2-") && strstr(spec, "WPA-"))
-			c->wpa_version = 3;
-
-		else if (strstr(spec, "WPA2"))
-			c->wpa_version = 2;
-
-		else if (strstr(spec, "WPA"))
-			c->wpa_version = 1;
-
-		else if (strstr(spec, "WEP"))
-			c->auth_algs = IWINFO_AUTH_OPEN | IWINFO_AUTH_SHARED;
-
-
-		if (strstr(spec, "PSK"))
-			c->auth_suites |= IWINFO_KMGMT_PSK;
-
-		if (strstr(spec, "802.1X") || strstr(spec, "EAP"))
-			c->auth_suites |= IWINFO_KMGMT_8021x;
-
-		if (strstr(spec, "WPA-NONE"))
-			c->auth_suites |= IWINFO_KMGMT_NONE;
-
-
-		if (strstr(spec, "TKIP"))
-			c->pair_ciphers |= IWINFO_CIPHER_TKIP;
-
-		if (strstr(spec, "CCMP"))
-			c->pair_ciphers |= IWINFO_CIPHER_CCMP;
-
-		if (strstr(spec, "WEP-40"))
-			c->pair_ciphers |= IWINFO_CIPHER_WEP40;
-
-		if (strstr(spec, "WEP-104"))
-			c->pair_ciphers |= IWINFO_CIPHER_WEP104;
-
-		c->group_ciphers = c->pair_ciphers;
-	}
-	else
-	{
-		c->enabled = 0;
+		parse_wpa_suites(suites, wpa_version, &c->wpa_version, &c->auth_suites);
+		parse_wpa_ciphers(suites, &c->pair_ciphers);
 	}
 }
 
