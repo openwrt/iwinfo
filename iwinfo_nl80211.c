@@ -1605,15 +1605,21 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 			"group_cipher",    wpa_groupwise, sizeof(wpa_groupwise),
 			"key_mgmt",        wpa_key_mgmt,  sizeof(wpa_key_mgmt)))
 	{
-		/* WEP */
+		/* WEP or Open */
 		if (!strcmp(wpa_key_mgmt, "NONE"))
 		{
 			parse_wpa_ciphers(wpa_pairwise, &c->pair_ciphers);
 			parse_wpa_ciphers(wpa_groupwise, &c->group_ciphers);
 
-			c->enabled      = !!(c->pair_ciphers | c->group_ciphers);
-			c->auth_suites |= IWINFO_KMGMT_NONE;
-			c->auth_algs   |= IWINFO_AUTH_OPEN; /* XXX: assumption */
+			if (c->pair_ciphers != 0 && c->pair_ciphers != IWINFO_CIPHER_NONE) {
+				c->enabled     = 1;
+				c->auth_suites = IWINFO_KMGMT_NONE;
+				c->auth_algs   = IWINFO_AUTH_OPEN | IWINFO_AUTH_SHARED;
+			}
+			else {
+				c->pair_ciphers = 0;
+				c->group_ciphers = 0;
+			}
 		}
 
 		/* WPA */
@@ -1690,11 +1696,12 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 				break;
 			}
 
-			c->enabled = c->auth_algs ? 1 : 0;
 			c->pair_ciphers |= nl80211_check_wepkey(wep_key0);
 			c->pair_ciphers |= nl80211_check_wepkey(wep_key1);
 			c->pair_ciphers |= nl80211_check_wepkey(wep_key2);
 			c->pair_ciphers |= nl80211_check_wepkey(wep_key3);
+
+			c->enabled = (c->auth_algs && c->pair_ciphers) ? 1 : 0;
 		}
 
 		c->group_ciphers = c->pair_ciphers;
