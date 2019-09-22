@@ -285,10 +285,50 @@ int iwinfo_hardware_id_from_mtd(struct iwinfo_hardware_id *id)
 	return (id->vendor_id && id->device_id) ? 0 : -1;
 }
 
+static void iwinfo_parse_rsn_cipher(uint8_t idx, uint8_t *ciphers)
+{
+	switch (idx)
+	{
+		case 0:
+			*ciphers |= IWINFO_CIPHER_NONE;
+			break;
+
+		case 1:
+			*ciphers |= IWINFO_CIPHER_WEP40;
+			break;
+
+		case 2:
+			*ciphers |= IWINFO_CIPHER_TKIP;
+			break;
+
+		case 3:  /* WRAP */
+			break;
+
+		case 4:
+			*ciphers |= IWINFO_CIPHER_CCMP;
+			break;
+
+		case 5:
+			*ciphers |= IWINFO_CIPHER_WEP104;
+			break;
+
+		case 6:  /* AES-128-CMAC */
+		case 7:  /* No group addressed */
+		case 8:  /* GCMP */
+		case 9:  /* GCMP-256 */
+		case 10: /* CCMP-256 */
+		case 11: /* BIP-GMAC-128 */
+		case 12: /* BIP-GMAC-256 */
+		case 13: /* BIP-CMAC-256 */
+			break;
+	}
+}
+
 void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 					  uint8_t defcipher, uint8_t defauth)
 {
 	uint16_t i, count;
+	uint8_t wpa_version = 0;
 
 	static unsigned char ms_oui[3]        = { 0x00, 0x50, 0xf2 };
 	static unsigned char ieee80211_oui[3] = { 0x00, 0x0f, 0xac };
@@ -297,9 +337,9 @@ void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 	len -= 2;
 
 	if (!memcmp(data, ms_oui, 3))
-		c->wpa_version += 1;
+		wpa_version |= 1;
 	else if (!memcmp(data, ieee80211_oui, 3))
-		c->wpa_version += 2;
+		wpa_version |= 2;
 
 	if (len < 4)
 	{
@@ -310,17 +350,7 @@ void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 	}
 
 	if (!memcmp(data, ms_oui, 3) || !memcmp(data, ieee80211_oui, 3))
-	{
-		switch (data[3])
-		{
-			case 1: c->group_ciphers |= IWINFO_CIPHER_WEP40;  break;
-			case 2: c->group_ciphers |= IWINFO_CIPHER_TKIP;   break;
-			case 4: c->group_ciphers |= IWINFO_CIPHER_CCMP;   break;
-			case 5: c->group_ciphers |= IWINFO_CIPHER_WEP104; break;
-			case 6:  /* AES-128-CMAC */ break;
-			default: /* proprietary */  break;
-		}
-	}
+		iwinfo_parse_rsn_cipher(data[3], &c->group_ciphers);
 
 	data += 4;
 	len -= 4;
@@ -337,21 +367,9 @@ void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 		return;
 
 	for (i = 0; i < count; i++)
-	{
 		if (!memcmp(data + 2 + (i * 4), ms_oui, 3) ||
-			!memcmp(data + 2 + (i * 4), ieee80211_oui, 3))
-		{
-			switch (data[2 + (i * 4) + 3])
-			{
-				case 1: c->pair_ciphers |= IWINFO_CIPHER_WEP40;  break;
-				case 2: c->pair_ciphers |= IWINFO_CIPHER_TKIP;   break;
-				case 4: c->pair_ciphers |= IWINFO_CIPHER_CCMP;   break;
-				case 5: c->pair_ciphers |= IWINFO_CIPHER_WEP104; break;
-				case 6:  /* AES-128-CMAC */ break;
-				default: /* proprietary */  break;
-			}
-		}
-	}
+		    !memcmp(data + 2 + (i * 4), ieee80211_oui, 3))
+			iwinfo_parse_rsn_cipher(data[2 + (i * 4) + 3], &c->pair_ciphers);
 
 	data += 2 + (count * 4);
 	len -= 2 + (count * 4);
@@ -373,13 +391,49 @@ void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 		{
 			switch (data[2 + (i * 4) + 3])
 			{
-				case 1: c->auth_suites |= IWINFO_KMGMT_8021x; break;
-				case 2: c->auth_suites |= IWINFO_KMGMT_PSK;   break;
-				case 3:  /* FT/IEEE 802.1X */                 break;
-				case 4:  /* FT/PSK */                         break;
-				case 5:  /* IEEE 802.1X/SHA-256 */            break;
-				case 6:  /* PSK/SHA-256 */                    break;
-				default: /* proprietary */                    break;
+				case 1:  /* IEEE 802.1x */
+					c->wpa_version |= wpa_version;
+					c->auth_suites |= IWINFO_KMGMT_8021x;
+					break;
+
+				case 2:  /* PSK */
+					c->wpa_version |= wpa_version;
+					c->auth_suites |= IWINFO_KMGMT_PSK;
+					break;
+
+				case 3:  /* FT/IEEE 802.1X */
+				case 4:  /* FT/PSK */
+				case 5:  /* IEEE 802.1X/SHA-256 */
+				case 6:  /* PSK/SHA-256 */
+				case 7:  /* TPK Handshake */
+					break;
+
+				case 8:  /* SAE */
+					c->wpa_version |= 4;
+					c->auth_suites |= IWINFO_KMGMT_SAE;
+					break;
+
+				case 9:  /* FT/SAE */
+				case 10: /* undefined */
+					break;
+
+				case 11: /* 802.1x Suite-B */
+				case 12: /* 802.1x Suite-B-192 */
+					c->wpa_version |= 4;
+					c->auth_suites |= IWINFO_KMGMT_8021x;
+					break;
+
+				case 13: /* FT/802.1x SHA-384 */
+				case 14: /* FILS SHA-256 */
+				case 15: /* FILS SHA-384 */
+				case 16: /* FT/FILS SHA-256 */
+				case 17: /* FT/FILS SHA-384 */
+					break;
+
+				case 18: /* OWE */
+					c->wpa_version |= 4;
+					c->auth_suites |= IWINFO_KMGMT_OWE;
+					break;
 			}
 		}
 	}
