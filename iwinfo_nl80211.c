@@ -2471,8 +2471,14 @@ static int nl80211_get_scanlist_wpactl(const char *ifname, char *buf, int *len)
 			tries--;
 		}
 
-		/* got a failure reply */
+		/* scanning already in progress, keep awaiting results */
 		else if (!strcmp(reply, "FAIL-BUSY\n"))
+		{
+			tries--;
+		}
+
+		/* another failure, abort */
+		else if (!strncmp(reply, "FAIL-", 5))
 		{
 			break;
 		}
