@@ -2185,11 +2185,11 @@ static int nl80211_get_txpwrlist(const char *ifname, char *buf, int *len)
 static void nl80211_get_scancrypto(char *spec, struct iwinfo_crypto_entry *c)
 {
 	int wpa_version = 0;
-	char *p, *proto, *suites;
+	char *p, *q, *proto, *suites;
 
 	c->enabled = 0;
 
-	for (p = strtok(spec, "[]"); p != NULL; p = strtok(NULL, "[]")) {
+	for (p = strtok_r(spec, "[]", &q); p; p = strtok_r(NULL, "[]", &q)) {
 		if (!strcmp(p, "WEP")) {
 			c->enabled      = 1;
 			c->auth_suites  = IWINFO_KMGMT_NONE;
