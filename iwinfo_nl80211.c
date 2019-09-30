@@ -870,7 +870,9 @@ static int __nl80211_wpactl_query(const char *ifname, ...)
 	if (nl80211_get_mode(ifname, &mode))
 		return 0;
 
-	if (mode != IWINFO_OPMODE_CLIENT && mode != IWINFO_OPMODE_ADHOC)
+	if (mode != IWINFO_OPMODE_CLIENT &&
+	    mode != IWINFO_OPMODE_ADHOC &&
+	    mode != IWINFO_OPMODE_MESHPOINT)
 		return 0;
 
 	sock = nl80211_wpactl_connect(ifname, &local);
@@ -1593,9 +1595,11 @@ static void parse_wpa_ciphers(const char *str, uint8_t *ciphers)
 static int nl80211_get_encryption(const char *ifname, char *buf)
 {
 	char *p;
+	int opmode;
 	uint8_t wpa_version = 0;
 	char wpa[2], wpa_key_mgmt[64], wpa_pairwise[16], wpa_groupwise[16];
 	char auth_algs[2], wep_key0[27], wep_key1[27], wep_key2[27], wep_key3[27];
+	char mode[16];
 
 	struct iwinfo_crypto_entry *c = (struct iwinfo_crypto_entry *)buf;
 
@@ -1603,7 +1607,8 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 	if (nl80211_wpactl_query(ifname,
 			"pairwise_cipher", wpa_pairwise,  sizeof(wpa_pairwise),
 			"group_cipher",    wpa_groupwise, sizeof(wpa_groupwise),
-			"key_mgmt",        wpa_key_mgmt,  sizeof(wpa_key_mgmt)))
+			"key_mgmt",        wpa_key_mgmt,  sizeof(wpa_key_mgmt),
+			"mode",            mode,          sizeof(mode)))
 	{
 		/* WEP or Open */
 		if (!strcmp(wpa_key_mgmt, "NONE"))
@@ -1620,6 +1625,16 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 				c->pair_ciphers = 0;
 				c->group_ciphers = 0;
 			}
+		}
+
+		/* MESH with SAE */
+		else if (!strcmp(mode, "mesh") && !strcmp(wpa_key_mgmt, "UNKNOWN"))
+		{
+			c->enabled = 1;
+			c->wpa_version = 4;
+			c->auth_suites = IWINFO_KMGMT_SAE;
+			c->pair_ciphers = IWINFO_CIPHER_CCMP;
+			c->group_ciphers = IWINFO_CIPHER_CCMP;
 		}
 
 		/* WPA */
@@ -1708,6 +1723,17 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 
 		return 0;
 	}
+
+	/* Ad-Hoc or Mesh interfaces without wpa_supplicant are open */
+	else if (!nl80211_get_mode(ifname, &opmode) &&
+	         (opmode == IWINFO_OPMODE_ADHOC ||
+	          opmode == IWINFO_OPMODE_MESHPOINT))
+	{
+		c->enabled = 0;
+
+		return 0;
+	}
+
 
 	return -1;
 }
