@@ -26,6 +26,7 @@
 #include <glob.h>
 #include <fnmatch.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "iwinfo_nl80211.h"
 
@@ -234,26 +235,49 @@ static struct nl80211_msg_conveyor * nl80211_ctl(int cmd, int flags)
 
 static int nl80211_phy_idx_from_uci_path(struct uci_section *s)
 {
-	const char *opt;
-	char buf[128];
+	size_t linklen, pathlen;
+	char buf[128], *link;
+	struct dirent *e;
+	const char *path;
 	int idx = -1;
-	glob_t gl;
+	DIR *d;
 
-	opt = uci_lookup_option_string(uci_ctx, s, "path");
-	if (!opt)
+	path = uci_lookup_option_string(uci_ctx, s, "path");
+	if (!path)
 		return -1;
 
-	snprintf(buf, sizeof(buf), "/sys/devices/%s/ieee80211/*/index", opt);  /**/
-	if (glob(buf, 0, NULL, &gl))
-		snprintf(buf, sizeof(buf), "/sys/devices/platform/%s/ieee80211/*/index", opt);  /**/
+	if ((d = opendir("/sys/class/ieee80211")) != NULL)
+	{
+		while ((e = readdir(d)) != NULL)
+		{
+			snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/device", e->d_name);
 
-	if (glob(buf, 0, NULL, &gl))
-		return -1;
+			link = realpath(buf, NULL);
 
-	if (gl.gl_pathc > 0)
-		idx = nl80211_readint(gl.gl_pathv[0]);
+			if (link == NULL)
+				continue;
 
-	globfree(&gl);
+			linklen = strlen(link);
+			pathlen = strlen(path);
+
+			if (pathlen >= linklen || strcmp(link + (linklen - pathlen), path))
+				linklen = 0;
+
+			free(link);
+
+			if (linklen == 0)
+				continue;
+
+			snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/index", e->d_name);
+
+			idx = nl80211_readint(buf);
+
+			if (idx >= 0)
+				break;
+		}
+
+		closedir(d);
+	}
 
 	return idx;
 }
