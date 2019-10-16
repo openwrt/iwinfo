@@ -2560,7 +2560,7 @@ static int nl80211_get_scanlist_wpactl(const char *ifname, char *buf, int *len)
 			flags  = strtok(NULL, "\t");
 			ssid   = strtok(NULL, "\n");
 
-			if (!bssid || !freq || !signal || !flags || !ssid)
+			if (!bssid || !freq || !signal || !flags)
 				continue;
 
 			/* BSSID */
@@ -2572,7 +2572,10 @@ static int nl80211_get_scanlist_wpactl(const char *ifname, char *buf, int *len)
 			e->mac[5] = strtol(&bssid[15], NULL, 16);
 
 			/* SSID */
-			wpasupp_ssid_decode(ssid, e->ssid, sizeof(e->ssid));
+			if (ssid)
+				wpasupp_ssid_decode(ssid, e->ssid, sizeof(e->ssid));
+			else
+				e->ssid[0] = 0;
 
 			/* Mode */
 			if (strstr(flags, "[MESH]"))
