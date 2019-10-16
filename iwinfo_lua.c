@@ -106,6 +106,8 @@ static char * iwinfo_crypto_print_suites(int suites)
 static char * iwinfo_crypto_desc(struct iwinfo_crypto_entry *c)
 {
 	static char desc[512] = { 0 };
+	char *pos = desc;
+	int i, n;
 
 	if (c)
 	{
@@ -135,35 +137,26 @@ static char * iwinfo_crypto_desc(struct iwinfo_crypto_entry *c)
 			/* WPA */
 			else if (c->wpa_version)
 			{
-				switch (c->wpa_version) {
-					case 4:
-						sprintf(desc, "WPA3 %s (%s)",
-							iwinfo_crypto_print_suites(c->auth_suites),
-							iwinfo_crypto_print_ciphers(
-								c->pair_ciphers | c->group_ciphers));
-						break;
+				for (i = 0, n = 0; i < 3; i++)
+					if (c->wpa_version & (1 << i))
+						n++;
 
-					case 3:
-						sprintf(desc, "mixed WPA/WPA2 %s (%s)",
-							iwinfo_crypto_print_suites(c->auth_suites),
-							iwinfo_crypto_print_ciphers(
-								c->pair_ciphers | c->group_ciphers));
-						break;
+				if (n > 1)
+					pos += sprintf(pos, "mixed ");
 
-					case 2:
-						sprintf(desc, "WPA2 %s (%s)",
-							iwinfo_crypto_print_suites(c->auth_suites),
-							iwinfo_crypto_print_ciphers(
-								c->pair_ciphers | c->group_ciphers));
-						break;
+				for (i = 0; i < 3; i++)
+					if (c->wpa_version & (1 << i))
+						if (i)
+							pos += sprintf(pos, "WPA%d/", i + 1);
+						else
+							pos += sprintf(pos, "WPA/");
 
-					case 1:
-						sprintf(desc, "WPA %s (%s)",
-							iwinfo_crypto_print_suites(c->auth_suites),
-							iwinfo_crypto_print_ciphers(
-								c->pair_ciphers | c->group_ciphers));
-						break;
-				}
+				pos--;
+
+				sprintf(pos, " %s (%s)",
+					iwinfo_crypto_print_suites(c->auth_suites),
+					iwinfo_crypto_print_ciphers(
+						c->pair_ciphers | c->group_ciphers));
 			}
 			else
 			{
