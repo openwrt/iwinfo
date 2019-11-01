@@ -1,6 +1,7 @@
 # libiwinfo hardware database
 # vendor id | device id | subsystem vendor id | subsystem device id |
 # txpower offset | frequency offset | "vendor name" | "device name"
+0x0777 0x11ac 0x0777 0xe7f9    0      0  "Ubiquiti" "LiteBeam 5AC"
 0xffff 0xffff 0xffff 0xb102    0      0  "Ubiquiti" "PowerStation2 (18V)"
 0xffff 0xffff 0xffff 0xb202    0      0  "Ubiquiti" "PowerStation2 (16D)"
 0xffff 0xffff 0xffff 0xb302    0      0  "Ubiquiti" "PowerStation2 (EXT)"
@@ -152,7 +153,10 @@
 0x168c 0x0033 0x19b6 0xd014    0      0  "MikroTik" "R11e-5HnD"
 0x168c 0x0033 0x19b6 0xd057    0      0  "MikroTik" "R11e-5HnDr2"
 0x168c 0x0033 0x19b6 0xd016    0      0  "MikroTik" "R11e-2HPnD"
+0x168c 0x0034 0x17aa 0x3214    0      0  "Atheros"  "AR9462"
 0x168c 0x003c 0x0000 0x0000    0      0  "Qualcomm Atheros" "QCA9880"
+0x168c 0x003c 0x168c 0x3223    0      0  "Qualcomm Atheros" "QCA9880"
+0x168c 0x003c 0x1a56 0x1420    0      0  "Qualcomm Atheros" "QCA9862"
 0x168c 0x003c 0x19b6 0xd03c    0      0  "Mikrotik" "R11e-5HacT"
 0x168c 0x0046 0x168c 0xcafe    0      0  "Qualcomm Atheros" "QCA9984"
 0x168c 0x0050 0x0000 0x0000    0      0  "Qualcomm Atheros" "QCA9887"
