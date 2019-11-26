@@ -367,7 +367,8 @@ static struct nl80211_msg_conveyor * nl80211_msg(const char *ifname,
 		phyidx = atoi(&ifname[3]);
 	else if (!strncmp(ifname, "radio", 5))
 		phyidx = nl80211_phy_idx_from_uci(ifname);
-	else if (!strncmp(ifname, "mon.", 4))
+
+	if (!strncmp(ifname, "mon.", 4))
 		ifidx = if_nametoindex(&ifname[4]);
 	else
 		ifidx = if_nametoindex(ifname);
@@ -380,10 +381,9 @@ static struct nl80211_msg_conveyor * nl80211_msg(const char *ifname,
 	if (!cv)
 		return NULL;
 
-	if (ifidx > -1)
+	if (ifidx > 0)
 		NLA_PUT_U32(cv->msg, NL80211_ATTR_IFINDEX, ifidx);
-
-	if (phyidx > -1)
+	else if (phyidx > -1)
 		NLA_PUT_U32(cv->msg, NL80211_ATTR_WIPHY, phyidx);
 
 	return cv;
