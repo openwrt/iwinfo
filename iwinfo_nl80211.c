@@ -2958,6 +2958,75 @@ out:
 	return -1;
 }
 
+struct chan_info {
+	int width;
+	int mode;
+};
+
+static int nl80211_get_htmode_cb(struct nl_msg *msg, void *arg)
+{
+	struct nlattr **tb = nl80211_parse(msg);
+	struct nlattr *cur;
+	struct chan_info *chn = arg;
+
+	if ((cur = tb[NL80211_ATTR_CHANNEL_WIDTH]))
+		chn->width = nla_get_u32(cur);
+
+	if ((cur = tb[NL80211_ATTR_BSS_HT_OPMODE]))
+		chn->mode = nla_get_u32(cur);
+
+	return NL_SKIP;
+}
+
+static int nl80211_get_htmode(const char *ifname, int *buf)
+{
+	struct chan_info chn = { .width = 0, .mode = 0 };
+	char *res;
+	int err;
+
+	res = nl80211_phy2ifname(ifname);
+	*buf = 0;
+
+	err =  nl80211_request(res ? res : ifname,
+				NL80211_CMD_GET_INTERFACE, 0,
+				nl80211_get_htmode_cb, &chn);
+	if (err)
+		return -1;
+
+	switch (chn.width) {
+	case NL80211_CHAN_WIDTH_20:
+		if (chn.mode == -1)
+			*buf = IWINFO_HTMODE_VHT20;
+		else
+			*buf = IWINFO_HTMODE_HT20;
+		break;
+	case NL80211_CHAN_WIDTH_40:
+		if (chn.mode == -1)
+			*buf = IWINFO_HTMODE_VHT40;
+		else
+			*buf = IWINFO_HTMODE_HT40;
+		break;
+	case NL80211_CHAN_WIDTH_80:
+		*buf = IWINFO_HTMODE_VHT80;
+		break;
+	case NL80211_CHAN_WIDTH_80P80:
+		*buf = IWINFO_HTMODE_VHT80_80;
+		break;
+	case NL80211_CHAN_WIDTH_160:
+		*buf = IWINFO_HTMODE_VHT160;
+		break;
+	case NL80211_CHAN_WIDTH_5:
+	case NL80211_CHAN_WIDTH_10:
+	case NL80211_CHAN_WIDTH_20_NOHT:
+		*buf = IWINFO_HTMODE_NOHT;
+		break;
+	default:
+		return -1;
+	}
+
+	return 0;
+}
+
 static int nl80211_get_htmodelist(const char *ifname, int *buf)
 {
 	struct nl80211_modes m = { 0 };
@@ -3147,6 +3216,7 @@ const struct iwinfo_ops nl80211_ops = {
 	.mbssid_support   = nl80211_get_mbssid_support,
 	.hwmodelist       = nl80211_get_hwmodelist,
 	.htmodelist       = nl80211_get_htmodelist,
+	.htmode		  = nl80211_get_htmode,
 	.mode             = nl80211_get_mode,
 	.ssid             = nl80211_get_ssid,
 	.bssid            = nl80211_get_bssid,

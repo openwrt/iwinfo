@@ -88,8 +88,9 @@ enum iwinfo_htmode {
 	IWINFO_HTMODE_VHT80      = (1 << 4),
 	IWINFO_HTMODE_VHT80_80   = (1 << 5),
 	IWINFO_HTMODE_VHT160     = (1 << 6),
+	IWINFO_HTMODE_NOHT       = (1 << 7),
 
-	IWINFO_HTMODE_COUNT      = 7
+	IWINFO_HTMODE_COUNT      = 8
 };
 
 extern const char *IWINFO_HTMODE_NAMES[IWINFO_HTMODE_COUNT];
@@ -231,6 +232,7 @@ struct iwinfo_ops {
 	int (*mbssid_support)(const char *, int *);
 	int (*hwmodelist)(const char *, int *);
 	int (*htmodelist)(const char *, int *);
+	int (*htmode)(const char *, int *);
 	int (*ssid)(const char *, char *);
 	int (*bssid)(const char *, char *);
 	int (*country)(const char *, char *);
