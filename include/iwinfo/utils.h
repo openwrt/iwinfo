@@ -53,6 +53,8 @@ struct iwinfo_hardware_entry * iwinfo_hardware(struct iwinfo_hardware_id *id);
 
 int iwinfo_hardware_id_from_mtd(struct iwinfo_hardware_id *id);
 
+void iwinfo_parse_bss_load(struct iwinfo_scanlist_entry *e, uint8_t *data);
+
 void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 					  uint8_t defcipher, uint8_t defauth);
 

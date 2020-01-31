@@ -179,6 +179,12 @@ struct iwinfo_scanlist_entry {
 	uint8_t quality;
 	uint8_t quality_max;
 	struct iwinfo_crypto_entry crypto;
+
+	/* BSS Load */
+	uint8_t has_bss_load;
+	uint8_t station_count;
+	uint8_t channel_utilization;
+	uint8_t admission_capacity;
 };
 
 struct iwinfo_country_entry {

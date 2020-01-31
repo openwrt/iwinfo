@@ -2296,6 +2296,10 @@ static void nl80211_get_scanlist_ie(struct nlattr **bss,
 			}
 			break;
 
+		case 11: /* BSS Load */
+			iwinfo_parse_bss_load(e, ie + 2);
+			break;
+
 		case 48: /* RSN */
 			iwinfo_parse_rsn(&e->crypto, ie + 2, ie[1],
 			                 IWINFO_CIPHER_CCMP, IWINFO_KMGMT_8021x);
