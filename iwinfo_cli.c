@@ -612,17 +612,8 @@ static void print_scanlist(const struct iwinfo_ops *iw, const char *ifname)
 			format_signal(e->signal - 0x100),
 			format_quality(e->quality),
 			format_quality_max(e->quality_max));
-		printf("          Encryption: %s\n",
+		printf("          Encryption: %s\n\n",
 			format_encryption(&e->crypto));
-		if (e->has_bss_load) {
-			printf("          Station count: %u\n",
-				e->station_count);
-			printf("          Channel utilization: %u/255\n",
-				e->channel_utilization);
-			printf("          Available admission capacity: %u (*32us)\n",
-				e->admission_capacity);
-		}
-		printf("\n");
 	}
 }
 

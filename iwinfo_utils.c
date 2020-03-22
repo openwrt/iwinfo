@@ -324,14 +324,6 @@ static void iwinfo_parse_rsn_cipher(uint8_t idx, uint8_t *ciphers)
 	}
 }
 
-void iwinfo_parse_bss_load(struct iwinfo_scanlist_entry *e, uint8_t *data)
-{
-	e->has_bss_load = 1;
-	e->station_count = ((data[1] << 8) | data[0]);
-	e->channel_utilization = data[2];
-	e->admission_capacity = ((data[4] << 8) | data[3]);
-}
-
 void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 					  uint8_t defcipher, uint8_t defauth)
 {

@@ -434,18 +434,6 @@ static int iwinfo_L_scanlist(lua_State *L, int (*func)(const char *, char *, int
 			lua_pushnumber(L, (e->signal - 0x100));
 			lua_setfield(L, -2, "signal");
 
-			/* BSS load */
-			if (e->has_bss_load) {
-				lua_pushnumber(L, e->station_count);
-				lua_setfield(L, -2, "station_count");
-
-				lua_pushnumber(L, e->channel_utilization);
-				lua_setfield(L, -2, "channel_utilization");
-
-				lua_pushnumber(L, e->admission_capacity);
-				lua_setfield(L, -2, "admission_capacity");
-			}
-
 			/* Crypto */
 			iwinfo_L_cryptotable(L, &e->crypto);
 			lua_setfield(L, -2, "encryption");
