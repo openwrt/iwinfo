@@ -2306,6 +2306,16 @@ static void nl80211_get_scanlist_ie(struct nlattr **bss,
 				iwinfo_parse_rsn(&e->crypto, ie + 6, ie[1] - 4,
 				                 IWINFO_CIPHER_TKIP, IWINFO_KMGMT_PSK);
 			break;
+		case 61: /* HT oeration */
+			e->ht_chan_info.primary_chan = ie[2];
+			e->ht_chan_info.secondary_chan_off = ie[3] & 0x3;
+			e->ht_chan_info.chan_width = (ie[4] & 0x4)>>2;
+			break;
+		case 192: /* VHT operation */
+			e->vht_chan_info.chan_width = ie[2];
+			e->vht_chan_info.center_chan_1 = ie[3];
+			e->vht_chan_info.center_chan_2 = ie[4];
+			break;
 		}
 
 		ielen -= ie[1] + 2;

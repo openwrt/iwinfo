@@ -323,6 +323,20 @@ static char * format_assocrate(struct iwinfo_rate_entry *r)
 	return buf;
 }
 
+static const char* format_chan_width(uint16_t width)
+{
+	switch (width) {
+		case 20: return "20 MHz";
+		case 2040: return "40 MHz and upper or 20 MHz with intolerant bit";
+		case 40: return "40 MHz or lower";
+		case 80: return "80 MHz";
+		case 8080: return "80+80 MHz";
+		case 160: return "160 MHz";
+	}
+
+	return "unknown";
+}
+
 
 static const char * print_type(const struct iwinfo_ops *iw, const char *ifname)
 {
@@ -612,8 +626,27 @@ static void print_scanlist(const struct iwinfo_ops *iw, const char *ifname)
 			format_signal(e->signal - 0x100),
 			format_quality(e->quality),
 			format_quality_max(e->quality_max));
-		printf("          Encryption: %s\n\n",
+		printf("          Encryption: %s\n",
 			format_encryption(&e->crypto));
+		printf("          HT Operation:\n");
+		printf("                    Primary Channel: %d\n",
+			e->ht_chan_info.primary_chan);
+		printf("                    Secondary Channel Offset: %s\n",
+			ht_secondary_offset[e->ht_chan_info.secondary_chan_off]);
+		printf("                    Channel Width: %s\n",
+			format_chan_width(e->ht_chan_info.chan_width));
+
+		if (e->vht_chan_info.center_chan_1) {
+			printf("          VHT Operation:\n");
+			printf("                    Channel Width: %s\n",
+				format_chan_width(e->vht_chan_info.chan_width));
+			printf("                    Center Frequency 1: %d\n",
+				 e->vht_chan_info.center_chan_1);
+			printf("                    Center Frequency 2: %d\n",
+				 e->vht_chan_info.center_chan_2);
+		}
+
+		printf("\n");
 	}
 }
 
