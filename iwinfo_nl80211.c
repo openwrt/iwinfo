@@ -1262,9 +1262,81 @@ static int nl80211_get_frequency(const char *ifname, int *buf)
 	return (*buf == 0) ? -1 : 0;
 }
 
+static int nl80211_get_center_freq1_cb(struct nl_msg *msg, void *arg)
+{
+	int *freq = arg;
+	struct nlattr **tb = nl80211_parse(msg);
+
+	if (tb[NL80211_ATTR_CENTER_FREQ1])
+		*freq = nla_get_u32(tb[NL80211_ATTR_CENTER_FREQ1]);
+
+	return NL_SKIP;
+}
+
+static int nl80211_get_center_freq1(const char *ifname, int *buf)
+{
+	char *res;
+
+	/* try to find frequency from interface info */
+	res = nl80211_phy2ifname(ifname);
+	*buf = 0;
+
+	nl80211_request(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0,
+	                nl80211_get_center_freq1_cb, buf);
+
+	return (*buf == 0) ? -1 : 0;
+}
+
+static int nl80211_get_center_freq2_cb(struct nl_msg *msg, void *arg)
+{
+	int *freq = arg;
+	struct nlattr **tb = nl80211_parse(msg);
+
+	if (tb[NL80211_ATTR_CENTER_FREQ2])
+		*freq = nla_get_u32(tb[NL80211_ATTR_CENTER_FREQ2]);
+
+	return NL_SKIP;
+}
+
+static int nl80211_get_center_freq2(const char *ifname, int *buf)
+{
+	char *res;
+
+	/* try to find frequency from interface info */
+	res = nl80211_phy2ifname(ifname);
+	*buf = 0;
+
+	nl80211_request(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0,
+	                nl80211_get_center_freq2_cb, buf);
+
+	return (*buf == 0) ? -1 : 0;
+}
+
 static int nl80211_get_channel(const char *ifname, int *buf)
 {
 	if (!nl80211_get_frequency(ifname, buf))
+	{
+		*buf = nl80211_freq2channel(*buf);
+		return 0;
+	}
+
+	return -1;
+}
+
+static int nl80211_get_center_chan1(const char *ifname, int *buf)
+{
+	if (!nl80211_get_center_freq1(ifname, buf))
+	{
+		*buf = nl80211_freq2channel(*buf);
+		return 0;
+	}
+
+	return -1;
+}
+
+static int nl80211_get_center_chan2(const char *ifname, int *buf)
+{
+	if (!nl80211_get_center_freq2(ifname, buf))
 	{
 		*buf = nl80211_freq2channel(*buf);
 		return 0;
@@ -3272,5 +3344,7 @@ const struct iwinfo_ops nl80211_ops = {
 	.countrylist      = nl80211_get_countrylist,
 	.survey           = nl80211_get_survey,
 	.lookup_phy       = nl80211_lookup_phyname,
-	.close            = nl80211_close
+	.close            = nl80211_close,
+	.center_chan1     = nl80211_get_center_chan1,
+	.center_chan2     = nl80211_get_center_chan2
 };

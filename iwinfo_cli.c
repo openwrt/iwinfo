@@ -445,6 +445,24 @@ static char * print_channel(const struct iwinfo_ops *iw, const char *ifname)
 	return format_channel(ch);
 }
 
+static char * print_center_chan1(const struct iwinfo_ops *iw, const char *ifname)
+{
+	int ch;
+	if (iw->center_chan1(ifname, &ch))
+		ch = -1;
+
+	return format_channel(ch);
+}
+
+static char * print_center_chan2(const struct iwinfo_ops *iw, const char *ifname)
+{
+	int ch;
+	if (iw->center_chan2(ifname, &ch))
+		ch = -1;
+
+	return format_channel(ch);
+}
+
 static char * print_frequency(const struct iwinfo_ops *iw, const char *ifname)
 {
 	int freq;
@@ -566,6 +584,11 @@ static void print_info(const struct iwinfo_ops *iw, const char *ifname)
 		print_mode(iw, ifname),
 		print_channel(iw, ifname),
 		print_frequency(iw, ifname));
+	if (iw->center_chan1 != NULL) {
+		printf("          Center Channel 1: %s",
+			print_center_chan1(iw, ifname));
+		printf(" 2: %s\n", print_center_chan2(iw, ifname));
+	}
 	printf("          Tx-Power: %s  Link Quality: %s/%s\n",
 		print_txpower(iw, ifname),
 		print_quality(iw, ifname),
