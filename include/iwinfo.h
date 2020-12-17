@@ -29,6 +29,7 @@
 #define IWINFO_80211_N       (1 << 3)
 #define IWINFO_80211_AC      (1 << 4)
 #define IWINFO_80211_AD      (1 << 5)
+#define IWINFO_80211_AX      (1 << 6)
 
 #define IWINFO_CIPHER_NONE   (1 << 0)
 #define IWINFO_CIPHER_WEP40  (1 << 1)
@@ -90,8 +91,13 @@ enum iwinfo_htmode {
 	IWINFO_HTMODE_VHT80_80   = (1 << 5),
 	IWINFO_HTMODE_VHT160     = (1 << 6),
 	IWINFO_HTMODE_NOHT       = (1 << 7),
+	IWINFO_HTMODE_HE20       = (1 << 8),
+	IWINFO_HTMODE_HE40       = (1 << 9),
+	IWINFO_HTMODE_HE80       = (1 << 10),
+	IWINFO_HTMODE_HE80_80    = (1 << 11),
+	IWINFO_HTMODE_HE160      = (1 << 12),
 
-	IWINFO_HTMODE_COUNT      = 8
+	IWINFO_HTMODE_COUNT      = 13
 };
 
 extern const char *IWINFO_HTMODE_NAMES[IWINFO_HTMODE_COUNT];

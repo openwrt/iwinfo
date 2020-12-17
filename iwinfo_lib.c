@@ -65,7 +65,12 @@ const char *IWINFO_HTMODE_NAMES[] = {
 	"VHT80",
 	"VHT80+80",
 	"VHT160",
-	"NOHT"
+	"NOHT",
+	"HE20",
+	"HE40",
+	"HE80",
+	"HE80+80",
+	"HE160"
 };
 
 

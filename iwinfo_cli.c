@@ -285,7 +285,8 @@ static char * format_hwmodes(int modes)
 			(modes & IWINFO_80211_G) ? "g" : "",
 			(modes & IWINFO_80211_N) ? "n" : "",
 			(modes & IWINFO_80211_AC) ? "ac" : "",
-			(modes & IWINFO_80211_AD) ? "ad" : "");
+			(modes & IWINFO_80211_AD) ? "ad" : "",
+			(modes & IWINFO_80211_AX) ? "ax" : "");
 
 	return buf;
 }
