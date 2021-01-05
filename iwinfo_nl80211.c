@@ -3109,6 +3109,31 @@ static int nl80211_get_mbssid_support(const char *ifname, int *buf)
 	return 0;
 }
 
+static int nl80211_hardware_id_from_fdt(struct iwinfo_hardware_id *id, const char *ifname)
+{
+	char *phy, compat[64], path[PATH_MAX];
+	int i;
+
+	/* Try to determine the phy name from the given interface */
+	phy = nl80211_ifname2phy(ifname);
+
+	snprintf(path, sizeof(path), "/sys/class/%s/%s/device/of_node/compatible",
+	         phy ? "ieee80211" : "net", phy ? phy : ifname);
+
+	if (nl80211_readstr(path, compat, sizeof(compat)) <= 0)
+		return -1;
+
+	if (!strcmp(compat, "qcom,ipq4019-wifi")) {
+		id->vendor_id = 0x168c;
+		id->device_id = 0x003c;
+		id->subsystem_vendor_id = 0x168c;
+		id->subsystem_device_id = 0x4019;
+	}
+
+	return (id->vendor_id && id->device_id) ? 0 : -1;
+}
+
+
 static int nl80211_get_hardware_id(const char *ifname, char *buf)
 {
 	struct iwinfo_hardware_id *id = (struct iwinfo_hardware_id *)buf;
@@ -3136,6 +3161,11 @@ static int nl80211_get_hardware_id(const char *ifname, char *buf)
 		if (nl80211_readstr(path, num, sizeof(num)) > 0)
 			*lookup[i].dest = strtoul(num, NULL, 16);
 	}
+
+	/* Failed to obtain hardware IDs, try FDT */
+	if (id->vendor_id == 0 || id->device_id == 0)
+		if (!nl80211_hardware_id_from_fdt(id, ifname))
+			return 0;
 
 	/* Failed to obtain hardware IDs, search board config */
 	if (id->vendor_id == 0 || id->device_id == 0)
