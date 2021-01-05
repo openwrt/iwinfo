@@ -158,6 +158,9 @@ static char * format_enc_ciphers(int ciphers)
 	if (ciphers & IWINFO_CIPHER_CCMP)
 		pos += sprintf(pos, "CCMP, ");
 
+	if (ciphers & IWINFO_CIPHER_GCMP)
+		pos += sprintf(pos, "GCMP, ");
+
 	if (ciphers & IWINFO_CIPHER_WRAP)
 		pos += sprintf(pos, "WRAP, ");
 

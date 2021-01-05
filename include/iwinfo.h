@@ -38,7 +38,8 @@
 #define IWINFO_CIPHER_WEP104 (1 << 5)
 #define IWINFO_CIPHER_AESOCB (1 << 6)
 #define IWINFO_CIPHER_CKIP   (1 << 7)
-#define IWINFO_CIPHER_COUNT  8
+#define IWINFO_CIPHER_GCMP   (1 << 8)
+#define IWINFO_CIPHER_COUNT  9
 
 #define IWINFO_KMGMT_NONE    (1 << 0)
 #define IWINFO_KMGMT_8021x   (1 << 1)
@@ -164,8 +165,8 @@ struct iwinfo_freqlist_entry {
 struct iwinfo_crypto_entry {
 	uint8_t	enabled;
 	uint8_t wpa_version;
-	uint8_t group_ciphers;
-	uint8_t pair_ciphers;
+	uint16_t group_ciphers;
+	uint16_t pair_ciphers;
 	uint8_t auth_suites;
 	uint8_t auth_algs;
 };

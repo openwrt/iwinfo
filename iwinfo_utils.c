@@ -285,7 +285,7 @@ int iwinfo_hardware_id_from_mtd(struct iwinfo_hardware_id *id)
 	return (id->vendor_id && id->device_id) ? 0 : -1;
 }
 
-static void iwinfo_parse_rsn_cipher(uint8_t idx, uint8_t *ciphers)
+static void iwinfo_parse_rsn_cipher(uint8_t idx, uint16_t *ciphers)
 {
 	switch (idx)
 	{
@@ -312,9 +312,12 @@ static void iwinfo_parse_rsn_cipher(uint8_t idx, uint8_t *ciphers)
 			*ciphers |= IWINFO_CIPHER_WEP104;
 			break;
 
+		case 8:
+			*ciphers |= IWINFO_CIPHER_GCMP;
+			break;
+
 		case 6:  /* AES-128-CMAC */
 		case 7:  /* No group addressed */
-		case 8:  /* GCMP */
 		case 9:  /* GCMP-256 */
 		case 10: /* CCMP-256 */
 		case 11: /* BIP-GMAC-128 */
@@ -325,7 +328,7 @@ static void iwinfo_parse_rsn_cipher(uint8_t idx, uint8_t *ciphers)
 }
 
 void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
-					  uint8_t defcipher, uint8_t defauth)
+					  uint16_t defcipher, uint8_t defauth)
 {
 	uint16_t i, count;
 	uint8_t wpa_version = 0;

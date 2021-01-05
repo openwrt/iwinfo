@@ -1654,10 +1654,11 @@ static struct {
 	{ "WEP-40",  IWINFO_CIPHER_WEP40 },
 	{ "NONE",    IWINFO_CIPHER_NONE },
 	{ "TKIP",    IWINFO_CIPHER_TKIP },
-	{ "CCMP",    IWINFO_CIPHER_CCMP }
+	{ "CCMP",    IWINFO_CIPHER_CCMP },
+	{ "GCMP",    IWINFO_CIPHER_GCMP }
 };
 
-static void parse_wpa_ciphers(const char *str, uint8_t *ciphers)
+static void parse_wpa_ciphers(const char *str, uint16_t *ciphers)
 {
 	int i;
 	size_t l;
