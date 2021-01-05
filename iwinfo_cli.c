@@ -58,7 +58,7 @@ static char * format_channel(int ch)
 
 static char * format_frequency(int freq)
 {
-	static char buf[10];
+	static char buf[11];
 
 	if (freq <= 0)
 		snprintf(buf, sizeof(buf), "unknown");
