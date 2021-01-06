@@ -394,6 +394,18 @@ static int madwifi_get_channel(const char *ifname, int *buf)
 	return -1;
 }
 
+static int madwifi_get_center_chan1(const char *ifname, int *buf)
+{
+	/* Not Supported */
+	return -1;
+}
+
+static int madwifi_get_center_chan2(const char *ifname, int *buf)
+{
+	/* Not Supported */
+	return -1;
+}
+
 static int madwifi_get_frequency(const char *ifname, int *buf)
 {
 	struct iwreq wrq;
@@ -1111,6 +1123,8 @@ const struct iwinfo_ops madwifi_ops = {
 	.name             = "madwifi",
 	.probe            = madwifi_probe,
 	.channel          = madwifi_get_channel,
+	.center_chan1     = madwifi_get_center_chan1,
+	.center_chan2     = madwifi_get_center_chan2,
 	.frequency        = madwifi_get_frequency,
 	.frequency_offset = madwifi_get_frequency_offset,
 	.txpower          = madwifi_get_txpower,

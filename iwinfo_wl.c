@@ -144,6 +144,18 @@ static int wl_get_channel(const char *ifname, int *buf)
 	return wl_ioctl(ifname, WLC_GET_CHANNEL, buf, sizeof(buf));
 }
 
+static int wl_get_center_chan1(const char *ifname, int *buf)
+{
+	/* Not Supported */
+	return -1;
+}
+
+static int wl_get_center_chan2(const char *ifname, int *buf)
+{
+	/* Not Supported */
+	return -1;
+}
+
 static int wl_get_frequency(const char *ifname, int *buf)
 {
 	return wext_ops.frequency(ifname, buf);
@@ -734,6 +746,8 @@ const struct iwinfo_ops wl_ops = {
 	.name             = "wl",
 	.probe            = wl_probe,
 	.channel          = wl_get_channel,
+	.center_chan1     = wl_get_center_chan1,
+	.center_chan2     = wl_get_center_chan2,
 	.frequency        = wl_get_frequency,
 	.frequency_offset = wl_get_frequency_offset,
 	.txpower          = wl_get_txpower,

@@ -185,6 +185,18 @@ static int wext_get_channel(const char *ifname, int *buf)
 	return -1;
 }
 
+static int wext_get_center_chan1(const char *ifname, int *buf)
+{
+	/* Not Supported */
+	return -1;
+}
+
+static int wext_get_center_chan2(const char *ifname, int *buf)
+{
+	/* Not Supported */
+	return -1;
+}
+
 static int wext_get_frequency(const char *ifname, int *buf)
 {
 	struct iwreq wrq;
@@ -534,6 +546,8 @@ const struct iwinfo_ops wext_ops = {
 	.name             = "wext",
 	.probe            = wext_probe,
 	.channel          = wext_get_channel,
+	.center_chan1     = wext_get_center_chan1,
+	.center_chan2     = wext_get_center_chan2,
 	.frequency        = wext_get_frequency,
 	.frequency_offset = wext_get_frequency_offset,
 	.txpower          = wext_get_txpower,
