@@ -3206,7 +3206,37 @@ static int nl80211_hardware_id_from_fdt(struct iwinfo_hardware_id *id, const cha
 	if (nl80211_readstr(path, compat, sizeof(compat)) <= 0)
 		return -1;
 
-	if (!strcmp(compat, "qcom,ipq4019-wifi")) {
+	if (!strcmp(compat, "qca,ar9130-wmac")) {
+		id->vendor_id = 0x168c;
+		id->device_id = 0x0029;
+		id->subsystem_vendor_id = 0x168c;
+		id->subsystem_device_id = 0x9130;
+	} else if (!strcmp(compat, "qca,ar9330-wmac")) {
+		id->vendor_id = 0x168c;
+		id->device_id = 0x0030;
+		id->subsystem_vendor_id = 0x168c;
+		id->subsystem_device_id = 0x9330;
+	} else if (!strcmp(compat, "qca,ar9340-wmac")) {
+		id->vendor_id = 0x168c;
+		id->device_id = 0x0030;
+		id->subsystem_vendor_id = 0x168c;
+		id->subsystem_device_id = 0x9340;
+	} else if (!strcmp(compat, "qca,qca9530-wmac")) {
+		id->vendor_id = 0x168c;
+		id->device_id = 0x0033;
+		id->subsystem_vendor_id = 0x168c;
+		id->subsystem_device_id = 0x9530;
+	} else if (!strcmp(compat, "qca,qca9550-wmac")) {
+		id->vendor_id = 0x168c;
+		id->device_id = 0x0033;
+		id->subsystem_vendor_id = 0x168c;
+		id->subsystem_device_id = 0x9550;
+	} else if (!strcmp(compat, "qca,qca9560-wmac")) {
+		id->vendor_id = 0x168c;
+		id->device_id = 0x0033;
+		id->subsystem_vendor_id = 0x168c;
+		id->subsystem_device_id = 0x9560;
+	} else if (!strcmp(compat, "qcom,ipq4019-wifi")) {
 		id->vendor_id = 0x168c;
 		id->device_id = 0x003c;
 		id->subsystem_vendor_id = 0x168c;
