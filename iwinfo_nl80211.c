@@ -2380,14 +2380,18 @@ static void nl80211_get_scanlist_ie(struct nlattr **bss,
 				                 IWINFO_CIPHER_TKIP, IWINFO_KMGMT_PSK);
 			break;
 		case 61: /* HT oeration */
-			e->ht_chan_info.primary_chan = ie[2];
-			e->ht_chan_info.secondary_chan_off = ie[3] & 0x3;
-			e->ht_chan_info.chan_width = (ie[4] & 0x4)>>2;
+			if (ie[1] >= 3) {
+				e->ht_chan_info.primary_chan = ie[2];
+				e->ht_chan_info.secondary_chan_off = ie[3] & 0x3;
+				e->ht_chan_info.chan_width = (ie[4] & 0x4)>>2;
+			}
 			break;
 		case 192: /* VHT operation */
-			e->vht_chan_info.chan_width = ie[2];
-			e->vht_chan_info.center_chan_1 = ie[3];
-			e->vht_chan_info.center_chan_2 = ie[4];
+			if (ie[1] >= 3) {
+				e->vht_chan_info.chan_width = ie[2];
+				e->vht_chan_info.center_chan_1 = ie[3];
+				e->vht_chan_info.center_chan_2 = ie[4];
+			}
 			break;
 		}
 
@@ -3347,6 +3351,8 @@ const struct iwinfo_ops nl80211_ops = {
 	.name             = "nl80211",
 	.probe            = nl80211_probe,
 	.channel          = nl80211_get_channel,
+	.center_chan1     = nl80211_get_center_chan1,
+	.center_chan2     = nl80211_get_center_chan2,
 	.frequency        = nl80211_get_frequency,
 	.frequency_offset = nl80211_get_frequency_offset,
 	.txpower          = nl80211_get_txpower,
@@ -3375,7 +3381,5 @@ const struct iwinfo_ops nl80211_ops = {
 	.countrylist      = nl80211_get_countrylist,
 	.survey           = nl80211_get_survey,
 	.lookup_phy       = nl80211_lookup_phyname,
-	.close            = nl80211_close,
-	.center_chan1     = nl80211_get_center_chan1,
-	.center_chan2     = nl80211_get_center_chan2
+	.close            = nl80211_close
 };

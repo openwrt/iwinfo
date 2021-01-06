@@ -255,6 +255,8 @@ struct iwinfo_ops {
 	int (*probe)(const char *ifname);
 	int (*mode)(const char *, int *);
 	int (*channel)(const char *, int *);
+	int (*center_chan1)(const char *, int *);
+	int (*center_chan2)(const char *, int *);
 	int (*frequency)(const char *, int *);
 	int (*frequency_offset)(const char *, int *);
 	int (*txpower)(const char *, int *);
@@ -283,8 +285,6 @@ struct iwinfo_ops {
 	int (*survey)(const char *, char *, int *);
 	int (*lookup_phy)(const char *, char *);
 	void (*close)(void);
-	int (*center_chan1)(const char *, int *);
-	int (*center_chan2)(const char *, int *);
 };
 
 const char * iwinfo_type(const char *ifname);
