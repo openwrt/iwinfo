@@ -322,6 +322,20 @@ static char * format_assocrate(struct iwinfo_rate_entry *r)
 				l = sizeof(buf) - (p - buf);
 			}
 		}
+		else if (r->is_he)
+		{
+			p += snprintf(p, l, ", HE-MCS %d, %dMHz", r->mcs, r->mhz);
+			l = sizeof(buf) - (p - buf);
+
+			p += snprintf(p, l, ", HE-NSS %d", r->nss);
+			l = sizeof(buf) - (p - buf);
+
+			p += snprintf(p, l, ", HE-GI %d", r->he_gi);
+			l = sizeof(buf) - (p - buf);
+
+			p += snprintf(p, l, ", HE-DCM %d", r->he_dcm);
+			l = sizeof(buf) - (p - buf);
+		}
 	}
 
 	return buf;

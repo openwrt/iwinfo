@@ -1869,7 +1869,19 @@ static void nl80211_parse_rateinfo(struct nlattr **ri,
 	else if (ri[NL80211_RATE_INFO_BITRATE])
 		re->rate = nla_get_u16(ri[NL80211_RATE_INFO_BITRATE]) * 100;
 
-	if (ri[NL80211_RATE_INFO_VHT_MCS])
+	if (ri[NL80211_RATE_INFO_HE_MCS])
+	{
+		re->is_he = 1;
+		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_HE_MCS]);
+
+		if (ri[NL80211_RATE_INFO_HE_NSS])
+			re->nss = nla_get_u8(ri[NL80211_RATE_INFO_HE_NSS]);
+		if (ri[NL80211_RATE_INFO_HE_GI])
+			re->he_gi = nla_get_u8(ri[NL80211_RATE_INFO_HE_GI]);
+		if (ri[NL80211_RATE_INFO_HE_DCM])
+			re->he_dcm = nla_get_u8(ri[NL80211_RATE_INFO_HE_DCM]);
+	}
+	else if (ri[NL80211_RATE_INFO_VHT_MCS])
 	{
 		re->is_vht = 1;
 		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_VHT_MCS]);
