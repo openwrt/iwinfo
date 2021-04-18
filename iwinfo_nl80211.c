@@ -2941,7 +2941,72 @@ struct nl80211_modes
 	bool ok;
 	uint32_t hw;
 	uint32_t ht;
+
+	uint32_t nl_freq;
+	uint16_t nl_ht;
+	uint32_t nl_vht;
+	uint16_t he_phy_cap[6];
 };
+
+static int nl80211_eval_modelist(struct nl80211_modes *m)
+{
+	/* Treat any nonzero capability as 11n */
+	if (m->nl_ht > 0)
+	{
+		m->hw |= IWINFO_80211_N;
+		m->ht |= IWINFO_HTMODE_HT20;
+
+		if (m->nl_ht & (1 << 1))
+			m->ht |= IWINFO_HTMODE_HT40;
+	}
+
+	if (m->he_phy_cap[0] != 0) {
+		m->hw |= IWINFO_80211_AX;
+		m->ht |= IWINFO_HTMODE_HE20;
+
+		if (m->he_phy_cap[0] & BIT(9))
+			m->ht |= IWINFO_HTMODE_HE40;
+		if (m->he_phy_cap[0] & BIT(10))
+			m->ht |= IWINFO_HTMODE_HE40 | IWINFO_HTMODE_HE80;
+		if (m->he_phy_cap[0] & BIT(11))
+			m->ht |= IWINFO_HTMODE_HE160;
+		if (m->he_phy_cap[0] & BIT(12))
+			m->ht |= IWINFO_HTMODE_HE160 | IWINFO_HTMODE_HE80_80;
+	}
+
+	if (m->nl_freq < 2485)
+	{
+		m->hw |= IWINFO_80211_B;
+		m->hw |= IWINFO_80211_G;
+	}
+	else if (m->nl_vht)
+	{
+		/* Treat any nonzero capability as 11ac */
+		if (m->nl_vht > 0)
+		{
+			m->hw |= IWINFO_80211_AC;
+			m->ht |= IWINFO_HTMODE_VHT20 | IWINFO_HTMODE_VHT40 | IWINFO_HTMODE_VHT80;
+
+			switch ((m->nl_vht >> 2) & 3)
+			{
+			case 2:
+				m->ht |= IWINFO_HTMODE_VHT80_80;
+				/* fall through */
+
+			case 1:
+				m->ht |= IWINFO_HTMODE_VHT160;
+			}
+		}
+	}
+	else if (m->nl_freq >= 56160)
+	{
+		m->hw |= IWINFO_80211_AD;
+	}
+	else if (!(m->hw & IWINFO_80211_AC))
+	{
+		m->hw |= IWINFO_80211_A;
+	}
+}
 
 static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 {
@@ -2962,27 +3027,16 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 			          nla_data(band), nla_len(band), NULL);
 
 			if (bands[NL80211_BAND_ATTR_HT_CAPA])
-				caps = nla_get_u16(bands[NL80211_BAND_ATTR_HT_CAPA]);
+				m->nl_ht = nla_get_u16(bands[NL80211_BAND_ATTR_HT_CAPA]);
 
-			/* Treat any nonzero capability as 11n */
-			if (caps > 0)
-			{
-				m->hw |= IWINFO_80211_N;
-				m->ht |= IWINFO_HTMODE_HT20;
-
-				if (caps & (1 << 1))
-					m->ht |= IWINFO_HTMODE_HT40;
-			}
+			if (bands[NL80211_BAND_ATTR_VHT_CAPA])
+				m->nl_vht = nla_get_u32(bands[NL80211_BAND_ATTR_VHT_CAPA]);
 
 			if (bands[NL80211_BAND_ATTR_IFTYPE_DATA]) {
 				struct nlattr *tb[NL80211_BAND_IFTYPE_ATTR_MAX + 1];
-				uint16_t phy_cap[6] = { 0 };
 				struct nlattr *nl_iftype;
 				int rem_band;
 				int len;
-
-				m->hw |= IWINFO_80211_AX;
-				m->ht |= IWINFO_HTMODE_HE20;
 
 				nla_for_each_nested(nl_iftype, bands[NL80211_BAND_ATTR_IFTYPE_DATA], rem_band) {
 					nla_parse(tb, NL80211_BAND_IFTYPE_ATTR_MAX,
@@ -2990,66 +3044,26 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 					if (tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]) {
 						len = nla_len(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]);
 
-						if (len > sizeof(phy_cap) - 1)
-							len = sizeof(phy_cap) - 1;
-						memcpy(&((__u8 *)phy_cap)[1],
+						if (len > sizeof(m->he_phy_cap) - 1)
+							len = sizeof(m->he_phy_cap) - 1;
+						memcpy(&((__u8 *)m->he_phy_cap)[1],
 							nla_data(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]),
 							len);
 					}
-
-					if (phy_cap[0] & BIT(9))
-						m->ht |= IWINFO_HTMODE_HE40;
-					if (phy_cap[0] & BIT(10))
-						m->ht |= IWINFO_HTMODE_HE40 | IWINFO_HTMODE_HE80;
-					if (phy_cap[0] & BIT(11))
-						m->ht |= IWINFO_HTMODE_HE160;
-					if (phy_cap[0] & BIT(12))
-						m->ht |= IWINFO_HTMODE_HE160 | IWINFO_HTMODE_HE80_80;
 				}
 			}
 
-			nla_for_each_nested(freq, bands[NL80211_BAND_ATTR_FREQS],
-			                    freqs_remain)
-			{
-				nla_parse(freqs, NL80211_FREQUENCY_ATTR_MAX,
-				          nla_data(freq), nla_len(freq), NULL);
-
-				if (!freqs[NL80211_FREQUENCY_ATTR_FREQ])
-					continue;
-
-				if (nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]) < 2485)
+			if (bands[NL80211_BAND_ATTR_FREQS]) {
+				nla_for_each_nested(freq, bands[NL80211_BAND_ATTR_FREQS],
+						    freqs_remain)
 				{
-					m->hw |= IWINFO_80211_B;
-					m->hw |= IWINFO_80211_G;
-				}
-				else if (bands[NL80211_BAND_ATTR_VHT_CAPA])
-				{
-					vht_caps = nla_get_u32(bands[NL80211_BAND_ATTR_VHT_CAPA]);
+					nla_parse(freqs, NL80211_FREQUENCY_ATTR_MAX,
+						nla_data(freq), nla_len(freq), NULL);
 
-					/* Treat any nonzero capability as 11ac */
-					if (vht_caps > 0)
-					{
-						m->hw |= IWINFO_80211_AC;
-						m->ht |= IWINFO_HTMODE_VHT20 | IWINFO_HTMODE_VHT40 | IWINFO_HTMODE_VHT80;
+					if (!freqs[NL80211_FREQUENCY_ATTR_FREQ])
+						continue;
 
-						switch ((vht_caps >> 2) & 3)
-						{
-						case 2:
-							m->ht |= IWINFO_HTMODE_VHT80_80;
-							/* fall through */
-
-						case 1:
-							m->ht |= IWINFO_HTMODE_VHT160;
-						}
-					}
-				}
-				else if (nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]) >= 56160)
-				{
-					m->hw |= IWINFO_80211_AD;
-				}
-				else if (!(m->hw & IWINFO_80211_AC))
-				{
-					m->hw |= IWINFO_80211_A;
+					m->nl_freq = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
 				}
 			}
 		}
@@ -3062,20 +3076,29 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_hwmodelist(const char *ifname, int *buf)
 {
-	struct nl80211_modes m = { 0 };
+	struct nl80211_msg_conveyor *cv;
+	struct nl80211_modes m = {};
+	uint32_t features = nl80211_get_protocol_features(ifname);
+	int flags;
 
-	if (nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
-	                    nl80211_get_modelist_cb, &m))
+	flags = features & NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP ? NLM_F_DUMP : 0;
+	cv = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, flags);
+	if (!cv)
 		goto out;
 
-	if (!m.ok)
-		goto out;
+	NLA_PUT_FLAG(cv->msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
+	if (nl80211_send(cv, nl80211_get_modelist_cb, &m))
+		goto nla_put_failure;
+
+	nl80211_eval_modelist(&m);
 
 	*buf = m.hw;
+
 	return 0;
 
+nla_put_failure:
+	nl80211_free(cv);
 out:
-	*buf = 0;
 	return -1;
 }
 
@@ -3150,20 +3173,29 @@ static int nl80211_get_htmode(const char *ifname, int *buf)
 
 static int nl80211_get_htmodelist(const char *ifname, int *buf)
 {
-	struct nl80211_modes m = { 0 };
+	struct nl80211_msg_conveyor *cv;
+	struct nl80211_modes m = {};
+	uint32_t features = nl80211_get_protocol_features(ifname);
+	int flags;
 
-	if (nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
-	                    nl80211_get_modelist_cb, &m))
+	flags = features & NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP ? NLM_F_DUMP : 0;
+	cv = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, flags);
+	if (!cv)
 		goto out;
 
-	if (!m.ok)
-		goto out;
+	NLA_PUT_FLAG(cv->msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
+	if (nl80211_send(cv, nl80211_get_modelist_cb, &m))
+		goto nla_put_failure;
+
+	nl80211_eval_modelist(&m);
 
 	*buf = m.ht;
+
 	return 0;
 
+nla_put_failure:
+	nl80211_free(cv);
 out:
-	*buf = 0;
 	return -1;
 }
 
