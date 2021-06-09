@@ -293,15 +293,14 @@ static const char *nl80211_phy_path_str(const char *phyname)
 	return link;
 }
 
-static int nl80211_phy_idx_from_uci_path(struct uci_section *s)
+static int nl80211_phy_idx_from_path(const char *path)
 {
 	char buf[128];
 	struct dirent *e;
-	const char *path, *cur_path;
+	const char *cur_path;
 	int idx = -1;
 	DIR *d;
 
-	path = uci_lookup_option_string(uci_ctx, s, "path");
 	if (!path)
 		return -1;
 
@@ -329,14 +328,12 @@ static int nl80211_phy_idx_from_uci_path(struct uci_section *s)
 	return idx;
 }
 
-static int nl80211_phy_idx_from_uci_macaddr(struct uci_section *s)
+static int nl80211_phy_idx_from_macaddr(const char *opt)
 {
-	const char *opt;
 	char buf[128];
 	int i, idx = -1;
 	glob_t gl;
 
-	opt = uci_lookup_option_string(uci_ctx, s, "macaddr");
 	if (!opt)
 		return -1;
 
@@ -363,12 +360,10 @@ static int nl80211_phy_idx_from_uci_macaddr(struct uci_section *s)
 	return idx;
 }
 
-static int nl80211_phy_idx_from_uci_phy(struct uci_section *s)
+static int nl80211_phy_idx_from_phy(const char *opt)
 {
-	const char *opt;
 	char buf[128];
 
-	opt = uci_lookup_option_string(uci_ctx, s, "phy");
 	if (!opt)
 		return -1;
 
@@ -379,21 +374,27 @@ static int nl80211_phy_idx_from_uci_phy(struct uci_section *s)
 static int nl80211_phy_idx_from_uci(const char *name)
 {
 	struct uci_section *s;
+	const char *opt;
 	int idx = -1;
 
 	s = iwinfo_uci_get_radio(name, "mac80211");
 	if (!s)
-		goto free;
+		goto out;
 
-	idx = nl80211_phy_idx_from_uci_path(s);
+	opt = uci_lookup_option_string(uci_ctx, s, "path");
+	idx = nl80211_phy_idx_from_path(opt);
+	if (idx >= 0)
+		goto out;
 
-	if (idx < 0)
-		idx = nl80211_phy_idx_from_uci_macaddr(s);
+	opt = uci_lookup_option_string(uci_ctx, s, "macaddr");
+	idx = nl80211_phy_idx_from_macaddr(opt);
+	if (idx >= 0)
+		goto out;
 
-	if (idx < 0)
-		idx = nl80211_phy_idx_from_uci_phy(s);
+	opt = uci_lookup_option_string(uci_ctx, s, "phy");
+	idx = nl80211_phy_idx_from_phy(s);
 
-free:
+out:
 	iwinfo_uci_free();
 	return idx;
 }
@@ -3469,7 +3470,14 @@ static int nl80211_lookup_phyname(const char *section, char *buf)
 {
 	int idx;
 
-	if ((idx = nl80211_phy_idx_from_uci(section)) < 0)
+	if (!strncmp(section, "path=", 5))
+		idx = nl80211_phy_idx_from_path(section + 5);
+	else if (!strncmp(section, "macaddr=", 8))
+		idx = nl80211_phy_idx_from_macaddr(section + 8);
+	else
+		idx = nl80211_phy_idx_from_uci(section);
+
+	if (idx < 0)
 		return -1;
 
 	sprintf(buf, "phy%d", idx);
