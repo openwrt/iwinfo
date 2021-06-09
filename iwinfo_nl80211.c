@@ -392,7 +392,7 @@ static int nl80211_phy_idx_from_uci(const char *name)
 		goto out;
 
 	opt = uci_lookup_option_string(uci_ctx, s, "phy");
-	idx = nl80211_phy_idx_from_phy(s);
+	idx = nl80211_phy_idx_from_phy(opt);
 
 out:
 	iwinfo_uci_free();
