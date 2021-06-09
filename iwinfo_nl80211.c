@@ -295,10 +295,9 @@ static const char *nl80211_phy_path_str(const char *phyname)
 
 static int nl80211_phy_idx_from_uci_path(struct uci_section *s)
 {
-	size_t linklen, pathlen;
-	char buf[128], *link;
+	char buf[128];
 	struct dirent *e;
-	const char *path;
+	const char *path, *cur_path;
 	int idx = -1;
 	DIR *d;
 
@@ -306,38 +305,26 @@ static int nl80211_phy_idx_from_uci_path(struct uci_section *s)
 	if (!path)
 		return -1;
 
-	if ((d = opendir("/sys/class/ieee80211")) != NULL)
-	{
-		while ((e = readdir(d)) != NULL)
-		{
-			snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/device", e->d_name);
+	d = opendir("/sys/class/ieee80211");
+	if (!d)
+		return -1;
 
-			link = realpath(buf, NULL);
+	while ((e = readdir(d)) != NULL) {
+		cur_path = nl80211_phy_path_str(e->d_name);
+		if (!cur_path)
+			continue;
 
-			if (link == NULL)
-				continue;
+		if (strcmp(cur_path, path) != 0)
+			continue;
 
-			linklen = strlen(link);
-			pathlen = strlen(path);
+		snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/index", e->d_name);
+		idx = nl80211_readint(buf);
 
-			if (pathlen >= linklen || strcmp(link + (linklen - pathlen), path))
-				linklen = 0;
-
-			free(link);
-
-			if (linklen == 0)
-				continue;
-
-			snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/index", e->d_name);
-
-			idx = nl80211_readint(buf);
-
-			if (idx >= 0)
-				break;
-		}
-
-		closedir(d);
+		if (idx >= 0)
+			break;
 	}
+
+	closedir(d);
 
 	return idx;
 }
