@@ -233,6 +233,66 @@ static struct nl80211_msg_conveyor * nl80211_ctl(int cmd, int flags)
 	return nl80211_new(nls->nlctrl, cmd, flags);
 }
 
+static const char *nl80211_phy_path_str(const char *phyname)
+{
+	static char path[PATH_MAX];
+	const char *prefix = "/sys/devices/";
+	int prefix_len = strlen(prefix);
+	int buf_len, offset;
+	struct dirent *e;
+	char buf[128], *link;
+	int phy_id;
+	int seq = 0;
+	DIR *d;
+
+	if (strncmp(phyname, "phy", 3) != 0)
+		return NULL;
+
+	phy_id = atoi(phyname + 3);
+	buf_len = snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/device", phyname);
+	link = realpath(buf, path);
+	if (!link)
+		return NULL;
+
+	if (strncmp(link, prefix, prefix_len) != 0)
+		return NULL;
+
+	link += prefix_len;
+
+	prefix = "platform/";
+	prefix_len = strlen(prefix);
+	if (!strncmp(link, prefix, prefix_len) && strstr(link, "/pci"))
+		link += prefix_len;
+
+	snprintf(buf + buf_len, sizeof(buf) - buf_len, "/ieee80211");
+	d = opendir(buf);
+	if (!d)
+		return link;
+
+	while ((e = readdir(d)) != NULL) {
+		int cur_id;
+
+		if (strncmp(e->d_name, "phy", 3) != 0)
+			continue;
+
+		cur_id = atoi(e->d_name + 3);
+		if (cur_id >= phy_id)
+			continue;
+
+		seq++;
+	}
+
+	closedir(d);
+
+	if (!seq)
+		return link;
+
+	offset = link - path + strlen(link);
+	snprintf(path + offset, sizeof(path) - offset, "+%d", seq);
+
+	return link;
+}
+
 static int nl80211_phy_idx_from_uci_path(struct uci_section *s)
 {
 	size_t linklen, pathlen;
@@ -3429,6 +3489,21 @@ static int nl80211_lookup_phyname(const char *section, char *buf)
 	return 0;
 }
 
+static int nl80211_phy_path(const char *phyname, const char **path)
+{
+	if (strncmp(phyname, "phy", 3) != 0)
+		return -1;
+
+	if (strchr(phyname, '/'))
+		return -1;
+
+	*path = nl80211_phy_path_str(phyname);
+	if (!*path)
+		return -1;
+
+	return 0;
+}
+
 const struct iwinfo_ops nl80211_ops = {
 	.name             = "nl80211",
 	.probe            = nl80211_probe,
@@ -3463,5 +3538,6 @@ const struct iwinfo_ops nl80211_ops = {
 	.countrylist      = nl80211_get_countrylist,
 	.survey           = nl80211_get_survey,
 	.lookup_phy       = nl80211_lookup_phyname,
+	.phy_path         = nl80211_phy_path,
 	.close            = nl80211_close
 };

@@ -293,6 +293,7 @@ struct iwinfo_ops {
 	int (*countrylist)(const char *, char *, int *);
 	int (*survey)(const char *, char *, int *);
 	int (*lookup_phy)(const char *, char *);
+	int (*phy_path)(const char *phyname, const char **path);
 	void (*close)(void);
 };
 

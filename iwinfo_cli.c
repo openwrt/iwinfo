@@ -875,6 +875,16 @@ static void lookup_phy(const struct iwinfo_ops *iw, const char *section)
 }
 
 
+static void lookup_path(const struct iwinfo_ops *iw, const char *phy)
+{
+	const char *path;
+
+	if (!iw->phy_path || iw->phy_path(phy, &path) || !path)
+		return;
+
+	printf("%s\n", path);
+}
+
 int main(int argc, char **argv)
 {
 	int i, rv = 0;
@@ -934,6 +944,10 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			if (!strcmp(argv[2], "path")) {
+				lookup_path(iw, argv[3]);
+				return 0;
+			}
 			switch (argv[2][0])
 			{
 			case 'p':
