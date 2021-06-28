@@ -298,10 +298,16 @@ static int nl80211_phy_idx_from_path(const char *path)
 	char buf[128];
 	struct dirent *e;
 	const char *cur_path;
+	int cur_path_len;
+	int path_len;
 	int idx = -1;
 	DIR *d;
 
 	if (!path)
+		return -1;
+
+	path_len = strlen(path);
+	if (!path_len)
 		return -1;
 
 	d = opendir("/sys/class/ieee80211");
@@ -313,7 +319,11 @@ static int nl80211_phy_idx_from_path(const char *path)
 		if (!cur_path)
 			continue;
 
-		if (strcmp(cur_path, path) != 0)
+		cur_path_len = strlen(cur_path);
+		if (cur_path_len < path_len)
+			continue;
+
+		if (strcmp(cur_path + cur_path_len - path_len, path) != 0)
 			continue;
 
 		snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/index", e->d_name);
