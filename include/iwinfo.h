@@ -255,7 +255,7 @@ struct iwinfo_hardware_entry {
 
 extern const struct iwinfo_iso3166_label IWINFO_ISO3166_NAMES[];
 
-#define IWINFO_HARDWARE_FILE	"/usr/share/libiwinfo/hardware.txt"
+#define IWINFO_HARDWARE_FILE	"/usr/share/libiwinfo/devices.txt"
 
 
 struct iwinfo_ops {
