@@ -136,6 +136,8 @@ enum iwinfo_freq_flag {
 	IWINFO_FREQ_NO_80MHZ,
 	IWINFO_FREQ_NO_160MHZ,
 	IWINFO_FREQ_NO_HE,
+	IWINFO_FREQ_NO_IR,
+	IWINFO_FREQ_INDOOR_ONLY,
 
 	/* keep last */
 	IWINFO_FREQ_FLAG_COUNT,
@@ -148,6 +150,8 @@ enum iwinfo_freq_flag {
 #define IWINFO_FREQ_NO_80MHZ       (1 << IWINFO_FREQ_NO_80MHZ)
 #define IWINFO_FREQ_NO_160MHZ      (1 << IWINFO_FREQ_NO_160MHZ)
 #define IWINFO_FREQ_NO_HE          (1 << IWINFO_FREQ_NO_HE)
+#define IWINFO_FREQ_NO_IR          (1 << IWINFO_FREQ_NO_IR)
+#define IWINFO_FREQ_INDOOR_ONLY    (1 << IWINFO_FREQ_INDOOR_ONLY)
 
 
 enum iwinfo_opmode {

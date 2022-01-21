@@ -3012,11 +3012,6 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 					e->mhz = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
 					e->channel = nl80211_freq2channel(e->mhz);
 
-					e->restricted = (
-						freqs[NL80211_FREQUENCY_ATTR_NO_IR] &&
-						!freqs[NL80211_FREQUENCY_ATTR_RADAR]
-					) ? 1 : 0;
-
 					if (freqs[NL80211_FREQUENCY_ATTR_NO_HT40_MINUS])
 						e->flags |= IWINFO_FREQ_NO_HT40MINUS;
 					if (freqs[NL80211_FREQUENCY_ATTR_NO_HT40_PLUS])
@@ -3031,6 +3026,14 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 						e->flags |= IWINFO_FREQ_NO_10MHZ;
 					if (freqs[NL80211_FREQUENCY_ATTR_NO_HE])
 						e->flags |= IWINFO_FREQ_NO_HE;
+					if (freqs[NL80211_FREQUENCY_ATTR_NO_IR] &&
+					    !freqs[NL80211_FREQUENCY_ATTR_RADAR])
+						e->flags |= IWINFO_FREQ_NO_IR;
+					if (freqs[NL80211_FREQUENCY_ATTR_INDOOR_ONLY])
+						e->flags |= IWINFO_FREQ_INDOOR_ONLY;
+
+					/* keep backwards compatibility */
+					e->restricted = (e->flags & IWINFO_FREQ_NO_IR) ? 1 : 0;
 
 					e++;
 					arr->count++;
