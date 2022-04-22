@@ -3012,7 +3012,8 @@ struct nl80211_modes
 	uint32_t hw;
 	uint32_t ht;
 
-	uint32_t nl_freq;
+	uint8_t bands;
+
 	uint16_t nl_ht;
 	uint32_t nl_vht;
 	uint16_t he_phy_cap[6];
@@ -3044,12 +3045,13 @@ static int nl80211_eval_modelist(struct nl80211_modes *m)
 			m->ht |= IWINFO_HTMODE_HE160 | IWINFO_HTMODE_HE80_80;
 	}
 
-	if (m->nl_freq < 2485)
+	if (m->bands & IWINFO_BAND_24)
 	{
 		m->hw |= IWINFO_80211_B;
 		m->hw |= IWINFO_80211_G;
 	}
-	else if (m->nl_vht)
+
+	if (m->nl_vht)
 	{
 		/* Treat any nonzero capability as 11ac */
 		if (m->nl_vht > 0)
@@ -3068,11 +3070,13 @@ static int nl80211_eval_modelist(struct nl80211_modes *m)
 			}
 		}
 	}
-	else if (m->nl_freq >= 56160)
+
+	if (m->bands & IWINFO_BAND_60)
 	{
 		m->hw |= IWINFO_80211_AD;
 	}
-	else if (!(m->hw & IWINFO_80211_AC))
+
+	if (!(m->hw & IWINFO_80211_AC))
 	{
 		m->hw |= IWINFO_80211_A;
 	}
@@ -3088,6 +3092,7 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 	struct nlattr *bands[NL80211_BAND_ATTR_MAX + 1];
 	struct nlattr *freqs[NL80211_FREQUENCY_ATTR_MAX + 1];
 	struct nlattr *band, *freq;
+	uint32_t freq_mhz;
 
 	if (attr[NL80211_ATTR_WIPHY_BANDS])
 	{
@@ -3133,7 +3138,24 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 					if (!freqs[NL80211_FREQUENCY_ATTR_FREQ])
 						continue;
 
-					m->nl_freq = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
+					freq_mhz = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
+
+					if (freq_mhz > 2400 && freq_mhz < 2485)
+					{
+						m->bands |= IWINFO_BAND_24;
+					}
+					else if (freq_mhz > 5000 && freq_mhz < 5850)
+					{
+						m->bands |= IWINFO_BAND_5;
+					}
+					else if (freq_mhz > 6000 && freq_mhz < 7120)
+					{
+						m->bands |= IWINFO_BAND_6;
+					}
+					else if (freq_mhz >= 56160)
+					{
+						m->bands |= IWINFO_BAND_60;
+					}
 				}
 			}
 		}

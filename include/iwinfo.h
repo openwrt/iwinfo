@@ -31,6 +31,11 @@
 #define IWINFO_80211_AD      (1 << 5)
 #define IWINFO_80211_AX      (1 << 6)
 
+#define IWINFO_BAND_24       (1 << 0)
+#define IWINFO_BAND_5        (1 << 1)
+#define IWINFO_BAND_6        (1 << 2)
+#define IWINFO_BAND_60       (1 << 3)
+
 #define IWINFO_CIPHER_NONE   (1 << 0)
 #define IWINFO_CIPHER_WEP40  (1 << 1)
 #define IWINFO_CIPHER_TKIP   (1 << 2)
