@@ -3051,7 +3051,7 @@ static int nl80211_eval_modelist(struct nl80211_modes *m)
 		m->hw |= IWINFO_80211_G;
 	}
 
-	if (m->nl_vht)
+	if (m->bands & IWINFO_BAND_5)
 	{
 		/* Treat any nonzero capability as 11ac */
 		if (m->nl_vht > 0)
@@ -3069,6 +3069,10 @@ static int nl80211_eval_modelist(struct nl80211_modes *m)
 				m->ht |= IWINFO_HTMODE_VHT160;
 			}
 		}
+		else
+		{
+			m->hw |= IWINFO_80211_A;
+		}
 	}
 
 	if (m->bands & IWINFO_BAND_60)
@@ -3076,10 +3080,6 @@ static int nl80211_eval_modelist(struct nl80211_modes *m)
 		m->hw |= IWINFO_80211_AD;
 	}
 
-	if (!(m->hw & IWINFO_80211_AC))
-	{
-		m->hw |= IWINFO_80211_A;
-	}
 }
 
 static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
