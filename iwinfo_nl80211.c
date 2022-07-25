@@ -3410,7 +3410,13 @@ static int nl80211_hardware_id_from_fdt(struct iwinfo_hardware_id *id, const cha
 		id->device_id = 0x7622;
 		id->subsystem_vendor_id = 0x14c3;
 		id->subsystem_device_id = 0x7622;
+	} else if (!strcmp(compat, "mediatek,mt7986-wmac")) {
+		id->vendor_id = 0x14c3;
+		id->device_id = 0x7986;
+		id->subsystem_vendor_id = 0x14c3;
+		id->subsystem_device_id = 0x7986;
 	}
+
 	return (id->vendor_id && id->device_id) ? 0 : -1;
 }
 
