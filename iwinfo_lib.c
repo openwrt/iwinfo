@@ -37,6 +37,8 @@ const char *IWINFO_KMGMT_NAMES[] = {
 	"NONE",
 	"802.1X",
 	"PSK",
+	"SAE",
+	"OWE",
 };
 
 const char *IWINFO_AUTH_NAMES[] = {
