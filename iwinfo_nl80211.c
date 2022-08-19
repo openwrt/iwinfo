@@ -1708,12 +1708,14 @@ static struct {
 	const char *match;
 	int cipher;
 } wpa_cipher_strings[] = {
-	{ "WEP-104", IWINFO_CIPHER_WEP104 },
-	{ "WEP-40",  IWINFO_CIPHER_WEP40 },
-	{ "NONE",    IWINFO_CIPHER_NONE },
-	{ "TKIP",    IWINFO_CIPHER_TKIP },
-	{ "CCMP",    IWINFO_CIPHER_CCMP },
-	{ "GCMP",    IWINFO_CIPHER_GCMP }
+	{ "WEP-104", IWINFO_CIPHER_WEP104  },
+	{ "WEP-40",  IWINFO_CIPHER_WEP40   },
+	{ "NONE",    IWINFO_CIPHER_NONE    },
+	{ "TKIP",    IWINFO_CIPHER_TKIP    },
+	{ "CCMP-256",IWINFO_CIPHER_CCMP256 },
+	{ "CCMP",    IWINFO_CIPHER_CCMP    },
+	{ "GCMP-256",IWINFO_CIPHER_GCMP256 },
+	{ "GCMP",    IWINFO_CIPHER_GCMP    }
 };
 
 static void parse_wpa_ciphers(const char *str, uint16_t *ciphers)

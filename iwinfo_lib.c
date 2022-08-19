@@ -31,6 +31,9 @@ const char *IWINFO_CIPHER_NAMES[] = {
 	"WEP104",
 	"AES-OCB",
 	"CKIP",
+	"GCMP",
+	"CCMP-256",
+	"GCMP-256",
 };
 
 const char *IWINFO_KMGMT_NAMES[] = {

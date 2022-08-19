@@ -316,10 +316,16 @@ static void iwinfo_parse_rsn_cipher(uint8_t idx, uint16_t *ciphers)
 			*ciphers |= IWINFO_CIPHER_GCMP;
 			break;
 
+		case 9:
+			*ciphers |= IWINFO_CIPHER_GCMP256;
+			break;
+
+		case 10:
+			*ciphers |= IWINFO_CIPHER_CCMP256;
+			break;
+
 		case 6:  /* AES-128-CMAC */
 		case 7:  /* No group addressed */
-		case 9:  /* GCMP-256 */
-		case 10: /* CCMP-256 */
 		case 11: /* BIP-GMAC-128 */
 		case 12: /* BIP-GMAC-256 */
 		case 13: /* BIP-CMAC-256 */

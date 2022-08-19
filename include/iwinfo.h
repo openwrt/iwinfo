@@ -36,16 +36,18 @@
 #define IWINFO_BAND_6        (1 << 2)
 #define IWINFO_BAND_60       (1 << 3)
 
-#define IWINFO_CIPHER_NONE   (1 << 0)
-#define IWINFO_CIPHER_WEP40  (1 << 1)
-#define IWINFO_CIPHER_TKIP   (1 << 2)
-#define IWINFO_CIPHER_WRAP   (1 << 3)
-#define IWINFO_CIPHER_CCMP   (1 << 4)
-#define IWINFO_CIPHER_WEP104 (1 << 5)
-#define IWINFO_CIPHER_AESOCB (1 << 6)
-#define IWINFO_CIPHER_CKIP   (1 << 7)
-#define IWINFO_CIPHER_GCMP   (1 << 8)
-#define IWINFO_CIPHER_COUNT  9
+#define IWINFO_CIPHER_NONE    (1 << 0)
+#define IWINFO_CIPHER_WEP40   (1 << 1)
+#define IWINFO_CIPHER_TKIP    (1 << 2)
+#define IWINFO_CIPHER_WRAP    (1 << 3)
+#define IWINFO_CIPHER_CCMP    (1 << 4)
+#define IWINFO_CIPHER_WEP104  (1 << 5)
+#define IWINFO_CIPHER_AESOCB  (1 << 6)
+#define IWINFO_CIPHER_CKIP    (1 << 7)
+#define IWINFO_CIPHER_GCMP    (1 << 8)
+#define IWINFO_CIPHER_CCMP256 (1 << 9)
+#define IWINFO_CIPHER_GCMP256 (1 << 10)
+#define IWINFO_CIPHER_COUNT  11
 
 #define IWINFO_KMGMT_NONE    (1 << 0)
 #define IWINFO_KMGMT_8021x   (1 << 1)
