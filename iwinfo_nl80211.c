@@ -1683,6 +1683,7 @@ static struct {
 	{ "IEEE 802.1X/EAP", 0, IWINFO_KMGMT_8021x },
 	{ "EAP-SUITE-B-192", 4, IWINFO_KMGMT_8021x },
 	{ "EAP-SUITE-B",     4, IWINFO_KMGMT_8021x },
+	{ "EAP-SHA384",      4, IWINFO_KMGMT_8021x },
 	{ "EAP-SHA256",      0, IWINFO_KMGMT_8021x },
 	{ "PSK-SHA256",      0, IWINFO_KMGMT_PSK },
 	{ "NONE",            0, IWINFO_KMGMT_NONE },
@@ -1867,6 +1868,9 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 			{
 				if (!strncmp(p, "WPA-", 4))
 					p += 4;
+
+				if (!strncmp(p, "FT-", 3))
+					p += 3;
 
 				parse_wpa_suites(p, atoi(wpa), &c->wpa_version, &c->auth_suites);
 			}

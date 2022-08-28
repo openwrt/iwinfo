@@ -428,11 +428,11 @@ void iwinfo_parse_rsn(struct iwinfo_crypto_entry *c, uint8_t *data, uint8_t len,
 
 				case 11: /* 802.1x Suite-B */
 				case 12: /* 802.1x Suite-B-192 */
+				case 13: /* FT/802.1x SHA-384 */
 					c->wpa_version |= 4;
 					c->auth_suites |= IWINFO_KMGMT_8021x;
 					break;
 
-				case 13: /* FT/802.1x SHA-384 */
 				case 14: /* FILS SHA-256 */
 				case 15: /* FILS SHA-384 */
 				case 16: /* FT/FILS SHA-256 */
