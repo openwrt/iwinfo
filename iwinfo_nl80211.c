@@ -409,7 +409,8 @@ out:
 static struct nl80211_msg_conveyor * nl80211_msg(const char *ifname,
                                                  int cmd, int flags)
 {
-	int ifidx = -1, phyidx = -1;
+	unsigned int ifidx = 0;
+	int phyidx = -1;
 	struct nl80211_msg_conveyor *cv;
 
 	if (ifname == NULL)
@@ -418,15 +419,16 @@ static struct nl80211_msg_conveyor * nl80211_msg(const char *ifname,
 	if (nl80211_init() < 0)
 		return NULL;
 
-	if (!strncmp(ifname, "phy", 3))
-		phyidx = atoi(&ifname[3]);
-	else if (!strncmp(ifname, "radio", 5))
-		phyidx = nl80211_phy_idx_from_uci(ifname);
-
 	if (!strncmp(ifname, "mon.", 4))
 		ifidx = if_nametoindex(&ifname[4]);
 	else
 		ifidx = if_nametoindex(ifname);
+
+	if (!ifidx) {
+		phyidx = nl80211_phy_idx_from_phy(ifname);
+		if (phyidx < 0)
+			phyidx = nl80211_phy_idx_from_uci(ifname);
+	}
 
 	/* Valid ifidx must be greater than 0 */
 	if ((ifidx <= 0) && (phyidx < 0))
@@ -715,11 +717,11 @@ static char * nl80211_phy2ifname(const char *ifname)
 	/* Only accept phy name of the form phy%d or radio%d */
 	if (!ifname)
 		return NULL;
-	else if (!strncmp(ifname, "phy", 3))
-		phyidx = atoi(&ifname[3]);
-	else if (!strncmp(ifname, "radio", 5))
-		phyidx = nl80211_phy_idx_from_uci(ifname);
-	else
+
+	phyidx = nl80211_phy_idx_from_phy(ifname);
+	if (phyidx < 0)
+		phyidx = nl80211_phy_idx_from_uci(ifname);;
+	if (phyidx < 0)
 		return NULL;
 
 	memset(nif, 0, sizeof(nif));
