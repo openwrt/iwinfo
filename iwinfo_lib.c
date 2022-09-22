@@ -344,7 +344,9 @@ static const struct iwinfo_ops *backends[] = {
 #ifdef USE_WL
 	&wl_ops,
 #endif
+#ifdef USE_WEXT
 	&wext_ops,
+#endif
 };
 
 const char * iwinfo_type(const char *ifname)

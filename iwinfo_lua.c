@@ -776,6 +776,7 @@ LUA_WRAP_STRUCT_OP(nl80211,hardware_id)
 #endif
 
 /* Wext */
+#ifdef USE_WEXT
 LUA_WRAP_INT_OP(wext,channel)
 LUA_WRAP_INT_OP(wext,frequency)
 LUA_WRAP_INT_OP(wext,frequency_offset)
@@ -802,6 +803,7 @@ LUA_WRAP_STRUCT_OP(wext,htmodelist)
 LUA_WRAP_STRUCT_OP(wext,encryption)
 LUA_WRAP_STRUCT_OP(wext,mbssid_support)
 LUA_WRAP_STRUCT_OP(wext,hardware_id)
+#endif
 
 #ifdef USE_WL
 /* Broadcom table */
@@ -903,6 +905,7 @@ static const luaL_reg R_nl80211[] = {
 #endif
 
 /* Wext table */
+#ifdef USE_WEXT
 static const luaL_reg R_wext[] = {
 	LUA_REG(wext,channel),
 	LUA_REG(wext,frequency),
@@ -932,6 +935,7 @@ static const luaL_reg R_wext[] = {
 	LUA_REG(wext,phyname),
 	{ NULL, NULL }
 };
+#endif
 
 /* Common */
 static const luaL_reg R_common[] = {
@@ -971,12 +975,14 @@ LUALIB_API int luaopen_iwinfo(lua_State *L) {
 	lua_setfield(L, -2, "nl80211");
 #endif
 
+#ifdef USE_WEXT
 	luaL_newmetatable(L, IWINFO_WEXT_META);
 	luaL_register(L, NULL, R_common);
 	luaL_register(L, NULL, R_wext);
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
 	lua_setfield(L, -2, "wext");
+#endif
 
 	return 1;
 }
