@@ -245,9 +245,6 @@ static const char *nl80211_phy_path_str(const char *phyname)
 	int seq = 0;
 	DIR *d;
 
-	if (strncmp(phyname, "phy", 3) != 0)
-		return NULL;
-
 	phy_id = atoi(phyname + 3);
 	buf_len = snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/device", phyname);
 	link = realpath(buf, path);
@@ -3526,9 +3523,6 @@ static int nl80211_lookup_phyname(const char *section, char *buf)
 
 static int nl80211_phy_path(const char *phyname, const char **path)
 {
-	if (strncmp(phyname, "phy", 3) != 0)
-		return -1;
-
 	if (strchr(phyname, '/'))
 		return -1;
 
