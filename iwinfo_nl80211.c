@@ -679,7 +679,7 @@ static int nl80211_channel2freq(int channel, const char *band)
 	return 0;
 }
 
-static int nl80211_ifname2phy_cb(struct nl_msg *msg, void *arg)
+static int nl80211_phyname_cb(struct nl_msg *msg, void *arg)
 {
 	char *buf = arg;
 	struct nlattr **attr = nl80211_parse(msg);
@@ -700,9 +700,32 @@ static char * nl80211_ifname2phy(const char *ifname)
 	memset(phy, 0, sizeof(phy));
 
 	nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
-	                nl80211_ifname2phy_cb, phy);
+	                nl80211_phyname_cb, phy);
 
 	return phy[0] ? phy : NULL;
+}
+
+static char * nl80211_phyidx2name(unsigned int idx)
+{
+	struct nl80211_msg_conveyor *cv;
+	static char phy[32] = { 0 };
+
+	if (nl80211_init() < 0)
+		return NULL;
+
+	cv = nl80211_new(nls->nl80211, NL80211_CMD_GET_WIPHY, 0);
+	if (!cv)
+		return NULL;
+
+	NLA_PUT_U32(cv->msg, NL80211_ATTR_WIPHY, idx);
+
+	memset(phy, 0, sizeof(phy));
+	nl80211_send(cv, nl80211_phyname_cb, phy);
+
+	return phy[0] ? phy : NULL;
+
+nla_put_failure:
+	return NULL;
 }
 
 static char * nl80211_phy2ifname(const char *ifname)
@@ -3507,6 +3530,7 @@ static int nl80211_get_frequency_offset(const char *ifname, int *buf)
 
 static int nl80211_lookup_phyname(const char *section, char *buf)
 {
+	const char *name;
 	int idx;
 
 	if (!strncmp(section, "path=", 5))
@@ -3519,7 +3543,11 @@ static int nl80211_lookup_phyname(const char *section, char *buf)
 	if (idx < 0)
 		return -1;
 
-	sprintf(buf, "phy%d", idx);
+	name = nl80211_phyidx2name(idx);
+	if (!name)
+		return -1;
+
+	strcpy(buf, name);
 	return 0;
 }
 
