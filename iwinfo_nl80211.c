@@ -241,11 +241,15 @@ static const char *nl80211_phy_path_str(const char *phyname)
 	int buf_len, offset;
 	struct dirent *e;
 	char buf[128], *link;
-	int phy_id;
+	int phy_idx;
 	int seq = 0;
 	DIR *d;
 
-	phy_id = atoi(phyname + 3);
+	snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/index", phyname);
+	phy_idx = nl80211_readint(buf);
+	if (phy_idx < 0)
+		return NULL;
+
 	buf_len = snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/device", phyname);
 	link = realpath(buf, path);
 	if (!link)
@@ -267,13 +271,14 @@ static const char *nl80211_phy_path_str(const char *phyname)
 		return link;
 
 	while ((e = readdir(d)) != NULL) {
-		int cur_id;
+		int cur_idx;
 
-		if (strncmp(e->d_name, "phy", 3) != 0)
+		snprintf(buf, sizeof(buf), "/sys/class/ieee80211/%s/index", e->d_name);
+		cur_idx = nl80211_readint(buf);
+		if (cur_idx < 0)
 			continue;
 
-		cur_id = atoi(e->d_name + 3);
-		if (cur_id >= phy_id)
+		if (cur_idx >= phy_idx)
 			continue;
 
 		seq++;
