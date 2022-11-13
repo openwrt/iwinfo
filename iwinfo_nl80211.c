@@ -938,6 +938,18 @@ static int nl80211_wpactl_connect(const char *ifname, struct sockaddr_un *local)
 		sprintf(remote.sun_path, "/var/run/wpa_supplicant-%s/%s",
 		        ifname, ifname);
 
+	/* Set client socket file permissions so that bind() creates the client
+	* socket with these permissions and there is no need to try to change
+	* them with chmod() after bind() which would have potential issues with
+	* race conditions. These permissions are needed to make sure the server
+	* side (wpa_supplicant or hostapd) can reply to the control interface
+	* messages.
+	*
+	* The lchown() calls below after bind() are also part of the needed
+	* operations to allow the response to go through. Those are using the
+	* no-deference-symlinks version to avoid races. */
+	fchmod(sock, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+
 	if (fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC) < 0)
 	{
 		close(sock);
@@ -965,6 +977,10 @@ static int nl80211_wpactl_connect(const char *ifname, struct sockaddr_un *local)
 		close(sock);
 		return -1;
 	}
+
+	/* Set group even if we do not have privileges to change owner */
+	lchown(local->sun_path, -1, 101);
+	lchown(local->sun_path, 101, 101);
 
 	return sock;
 }
