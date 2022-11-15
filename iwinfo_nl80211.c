@@ -22,6 +22,7 @@
  * Parts of this code are derived from the Linux iw utility.
  */
 
+#include <sys/stat.h>
 #include <limits.h>
 #include <glob.h>
 #include <fnmatch.h>
@@ -411,6 +412,15 @@ out:
 	return idx;
 }
 
+static bool nl80211_is_ifname(const char *name)
+{
+	struct stat st;
+	char buffer[PATH_MAX];
+
+	snprintf(buffer, sizeof(buffer), "/sys/class/net/%s", name);
+	return !lstat(buffer, &st);
+}
+
 static struct nl80211_msg_conveyor * nl80211_msg(const char *ifname,
                                                  int cmd, int flags)
 {
@@ -426,10 +436,10 @@ static struct nl80211_msg_conveyor * nl80211_msg(const char *ifname,
 
 	if (!strncmp(ifname, "mon.", 4))
 		ifidx = if_nametoindex(&ifname[4]);
-	else
+	else if (nl80211_is_ifname(ifname))
 		ifidx = if_nametoindex(ifname);
-
-	if (!ifidx) {
+	else
+	{
 		phyidx = nl80211_phy_idx_from_phy(ifname);
 		if (phyidx < 0)
 			phyidx = nl80211_phy_idx_from_uci(ifname);
