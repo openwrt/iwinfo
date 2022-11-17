@@ -655,7 +655,13 @@ static int __nl80211_wait(const char *family, const char *group, ...)
 #define nl80211_wait(family, group, ...) \
 	__nl80211_wait(family, group, __VA_ARGS__, 0)
 
-
+/* This is linux's ieee80211_freq_khz_to_channel() which is:
+ * SPDX-License-Identifier: GPL-2.0
+ * Copyright 2007-2009 Johannes Berg <johannes@sipsolutions.net>
+ * Copyright 2013-2014 Intel Mobile Communications GmbH
+ * Copyright 2017 Intel Deutschland GmbH
+ * Copyright (C) 2018-2022 Intel Corporation
+ */
 static int nl80211_freq2channel(int freq)
 {
 	if (freq == 2484)
@@ -664,14 +670,31 @@ static int nl80211_freq2channel(int freq)
 		return (freq - 2407) / 5;
 	else if (freq >= 4910 && freq <= 4980)
 		return (freq - 4000) / 5;
-	else if(freq >= 56160 + 2160 * 1 && freq <= 56160 + 2160 * 6)
+	else if (freq < 5925)
+		return (freq - 5000) / 5;
+	else if (freq == 5935)
+		return 2;
+	else if (freq <= 45000) /* DMG band lower limit */
+		/* see 802.11ax D6.1 27.3.22.2 */
+		return (freq - 5950) / 5;
+	else if (freq >= 58320 && freq <= 70200)
 		return (freq - 56160) / 2160;
 	else
-		return (freq - 5000) / 5;
+		return 0;
 }
 
-static int nl80211_channel2freq(int channel, const char *band)
+/* This is linux's ieee80211_channel_to_freq_khz() which is:
+ * SPDX-License-Identifier: GPL-2.0
+ * Copyright 2007-2009 Johannes Berg <johannes@sipsolutions.net>
+ * Copyright 2013-2014 Intel Mobile Communications GmbH
+ * Copyright 2017 Intel Deutschland GmbH
+ * Copyright (C) 2018-2022 Intel Corporation
+ */
+static int nl80211_channel2freq(int channel, const char *band, bool ax)
 {
+	if (channel < 1)
+		return 0;
+
 	if (!band || band[0] != 'a')
 	{
 		if (channel == 14)
@@ -679,9 +702,17 @@ static int nl80211_channel2freq(int channel, const char *band)
 		else if (channel < 14)
 			return (channel * 5) + 2407;
 	}
-	else if ( strcmp(band, "ad") == 0)
+	else if (strcmp(band, "ad")  == 0)
 	{
-		return 56160 + 2160 * channel;
+		if (channel < 7)
+			return 56160 + 2160 * channel;
+	}
+	else if (ax)
+	{
+		if (channel == 2)
+			return 5935;
+		if (channel < 233)
+			return (channel * 5) + 5950;
 	}
 	else
 	{
@@ -1336,7 +1367,7 @@ static int nl80211_get_frequency_info_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_frequency(const char *ifname, int *buf)
 {
-	char *res, channel[4], hwmode[3];
+	char *res, channel[4] = { 0 }, hwmode[3] = { 0 }, ax[2] = { 0 };
 
 	/* try to find frequency from interface info */
 	res = nl80211_phy2ifname(ifname);
@@ -1348,9 +1379,10 @@ static int nl80211_get_frequency(const char *ifname, int *buf)
 	/* failed, try to find frequency from hostapd info */
 	if ((*buf == 0) &&
 	    nl80211_hostapd_query(ifname, "hw_mode", hwmode, sizeof(hwmode),
-	                                  "channel", channel, sizeof(channel)) == 2)
+	                                  "channel", channel, sizeof(channel),
+	                                  "ieee80211ax", ax, sizeof(ax)) >= 2)
 	{
-		*buf = nl80211_channel2freq(atoi(channel), hwmode);
+		*buf = nl80211_channel2freq(atoi(channel), hwmode, ax[0] == '1');
 	}
 
 	/* failed, try to find frequency from scan results */
