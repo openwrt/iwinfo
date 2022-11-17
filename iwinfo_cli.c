@@ -723,7 +723,7 @@ static void print_txpwrlist(const struct iwinfo_ops *iw, const char *ifname)
 
 static void print_freqlist(const struct iwinfo_ops *iw, const char *ifname)
 {
-	int i, len, ch;
+	int i, len, freq;
 	char buf[IWINFO_BUFSIZE];
 	struct iwinfo_freqlist_entry *e;
 
@@ -733,15 +733,15 @@ static void print_freqlist(const struct iwinfo_ops *iw, const char *ifname)
 		return;
 	}
 
-	if (iw->channel(ifname, &ch))
-		ch = -1;
+	if (iw->frequency(ifname, &freq))
+		freq = -1;
 
 	for (i = 0; i < len; i += sizeof(struct iwinfo_freqlist_entry))
 	{
 		e = (struct iwinfo_freqlist_entry *) &buf[i];
 
 		printf("%s %s (Channel %s)%s\n",
-			(ch == e->channel) ? "*" : " ",
+			(freq == e->mhz) ? "*" : " ",
 			format_frequency(e->mhz),
 			format_channel(e->channel),
 			e->restricted ? " [restricted]" : "");
