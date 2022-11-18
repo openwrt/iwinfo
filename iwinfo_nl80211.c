@@ -240,7 +240,7 @@ static const char *nl80211_phy_path_str(const char *phyname)
 	int prefix_len = strlen(prefix);
 	int buf_len, offset;
 	struct dirent *e;
-	char buf[128], *link;
+	char buf[512], *link;
 	int phy_idx;
 	int seq = 0;
 	DIR *d;
@@ -297,7 +297,7 @@ static const char *nl80211_phy_path_str(const char *phyname)
 
 static int nl80211_phy_idx_from_path(const char *path)
 {
-	char buf[128];
+	char buf[512];
 	struct dirent *e;
 	const char *cur_path;
 	int cur_path_len;
@@ -736,7 +736,7 @@ nla_put_failure:
 static char * nl80211_phy2ifname(const char *ifname)
 {
 	int ifidx = -1, cifidx = -1, phyidx = -1;
-	char buffer[64];
+	char buffer[512];
 	static char nif[IFNAMSIZ] = { 0 };
 
 	DIR *d;
