@@ -3284,9 +3284,10 @@ static int nl80211_get_htmode_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_htmode(const char *ifname, int *buf)
 {
-	struct chan_info chn = { .width = 0, .mode = 0 };
-	char *res;
+	struct chan_info chn = { 0 };
+	char *res, b[2] = { 0 };
 	int err;
+	bool he = false;
 
 	res = nl80211_phy2ifname(ifname);
 	*buf = 0;
@@ -3297,27 +3298,45 @@ static int nl80211_get_htmode(const char *ifname, int *buf)
 	if (err)
 		return -1;
 
+	if (nl80211_hostapd_query(res ? res : ifname, "ieee80211ax", b, sizeof(b)))
+		he = b[0] == '1';
+	else if (nl80211_wpactl_query(res ? res : ifname, "wifi_generation", b, sizeof(b)))
+		he = b[0] == '6';
+
 	switch (chn.width) {
 	case NL80211_CHAN_WIDTH_20:
-		if (chn.mode == -1)
+		if (he)
+			*buf = IWINFO_HTMODE_HE20;
+		else if (chn.mode == -1)
 			*buf = IWINFO_HTMODE_VHT20;
 		else
 			*buf = IWINFO_HTMODE_HT20;
 		break;
 	case NL80211_CHAN_WIDTH_40:
-		if (chn.mode == -1)
+		if (he)
+			*buf = IWINFO_HTMODE_HE40;
+		else if (chn.mode == -1)
 			*buf = IWINFO_HTMODE_VHT40;
 		else
 			*buf = IWINFO_HTMODE_HT40;
 		break;
 	case NL80211_CHAN_WIDTH_80:
-		*buf = IWINFO_HTMODE_VHT80;
+		if (he)
+			*buf = IWINFO_HTMODE_HE80;
+		else
+			*buf = IWINFO_HTMODE_VHT80;
 		break;
 	case NL80211_CHAN_WIDTH_80P80:
-		*buf = IWINFO_HTMODE_VHT80_80;
+		if (he)
+			*buf = IWINFO_HTMODE_HE80_80;
+		else
+			*buf = IWINFO_HTMODE_VHT80_80;
 		break;
 	case NL80211_CHAN_WIDTH_160:
-		*buf = IWINFO_HTMODE_VHT160;
+		if (he)
+			*buf = IWINFO_HTMODE_HE160;
+		else
+			*buf = IWINFO_HTMODE_VHT160;
 		break;
 	case NL80211_CHAN_WIDTH_5:
 	case NL80211_CHAN_WIDTH_10:
