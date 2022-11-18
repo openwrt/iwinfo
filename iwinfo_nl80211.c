@@ -153,6 +153,23 @@ static int nl80211_readstr(const char *path, char *buffer, int length)
 	return rv;
 }
 
+static int nl80211_get_band(int nla_type)
+{
+	switch (nla_type)
+	{
+	case NL80211_BAND_2GHZ:
+		return IWINFO_BAND_24;
+	case NL80211_BAND_5GHZ:
+		return IWINFO_BAND_5;
+	case NL80211_BAND_6GHZ:
+		return IWINFO_BAND_6;
+	case NL80211_BAND_60GHZ:
+		return IWINFO_BAND_60;
+	}
+
+	return 0;
+}
+
 
 static int nl80211_msg_error(struct sockaddr_nl *nla,
 	struct nlmsgerr *err, void *arg)
@@ -3169,17 +3186,17 @@ static void nl80211_eval_modelist(struct nl80211_modes *m)
 static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 {
 	struct nl80211_modes *m = arg;
-	int bands_remain, freqs_remain;
+	int bands_remain;
 	struct nlattr **attr = nl80211_parse(msg);
 	struct nlattr *bands[NL80211_BAND_ATTR_MAX + 1];
-	struct nlattr *freqs[NL80211_FREQUENCY_ATTR_MAX + 1];
-	struct nlattr *band, *freq;
-	uint32_t freq_mhz;
+	struct nlattr *band;
 
 	if (attr[NL80211_ATTR_WIPHY_BANDS])
 	{
 		nla_for_each_nested(band, attr[NL80211_ATTR_WIPHY_BANDS], bands_remain)
 		{
+			m->bands |= nl80211_get_band(band->nla_type);
+
 			nla_parse(bands, NL80211_BAND_ATTR_MAX,
 			          nla_data(band), nla_len(band), NULL);
 
@@ -3206,37 +3223,6 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 						memcpy(&((__u8 *)m->he_phy_cap)[1],
 							nla_data(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]),
 							len);
-					}
-				}
-			}
-
-			if (bands[NL80211_BAND_ATTR_FREQS]) {
-				nla_for_each_nested(freq, bands[NL80211_BAND_ATTR_FREQS],
-						    freqs_remain)
-				{
-					nla_parse(freqs, NL80211_FREQUENCY_ATTR_MAX,
-						nla_data(freq), nla_len(freq), NULL);
-
-					if (!freqs[NL80211_FREQUENCY_ATTR_FREQ])
-						continue;
-
-					freq_mhz = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
-
-					if (freq_mhz > 2400 && freq_mhz < 2485)
-					{
-						m->bands |= IWINFO_BAND_24;
-					}
-					else if (freq_mhz > 5000 && freq_mhz < 5850)
-					{
-						m->bands |= IWINFO_BAND_5;
-					}
-					else if (freq_mhz > 6000 && freq_mhz < 7120)
-					{
-						m->bands |= IWINFO_BAND_6;
-					}
-					else if (freq_mhz >= 56160)
-					{
-						m->bands |= IWINFO_BAND_60;
 					}
 				}
 			}
