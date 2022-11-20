@@ -3029,6 +3029,8 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 						e->flags |= IWINFO_FREQ_NO_20MHZ;
 					if (freqs[NL80211_FREQUENCY_ATTR_NO_10MHZ])
 						e->flags |= IWINFO_FREQ_NO_10MHZ;
+					if (freqs[NL80211_FREQUENCY_ATTR_NO_HE])
+						e->flags |= IWINFO_FREQ_NO_HE;
 
 					e++;
 					arr->count++;
