@@ -935,8 +935,7 @@ static int nl80211_wpactl_connect(const char *ifname, struct sockaddr_un *local)
 
 	remote.sun_family = AF_UNIX;
 	remote_length = sizeof(remote.sun_family) +
-		sprintf(remote.sun_path, "/var/run/wpa_supplicant-%s/%s",
-		        ifname, ifname);
+		sprintf(remote.sun_path, "/var/run/wpa_supplicant/%s", ifname);
 
 	/* Set client socket file permissions so that bind() creates the client
 	* socket with these permissions and there is no need to try to change
@@ -958,14 +957,8 @@ static int nl80211_wpactl_connect(const char *ifname, struct sockaddr_un *local)
 
 	if (connect(sock, (struct sockaddr *)&remote, remote_length))
 	{
-		remote_length = sizeof(remote.sun_family) +
-			sprintf(remote.sun_path, "/var/run/wpa_supplicant/%s", ifname);
-
-		if (connect(sock, (struct sockaddr *)&remote, remote_length))
-		{
-			close(sock);
-			return -1;
-		}
+		close(sock);
+		return -1;
 	}
 
 	local->sun_family = AF_UNIX;
