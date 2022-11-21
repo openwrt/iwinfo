@@ -43,6 +43,8 @@ static inline int iwinfo_mbm2dbm(int gain)
 	return gain / 100;
 }
 
+size_t iwinfo_format_hwmodes(int modes, char *buf, size_t len);
+
 int iwinfo_ifup(const char *ifname);
 int iwinfo_ifdown(const char *ifname);
 int iwinfo_ifmac(const char *ifname);
