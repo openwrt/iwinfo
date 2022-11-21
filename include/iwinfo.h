@@ -35,6 +35,7 @@
 #define IWINFO_BAND_5        (1 << 1)
 #define IWINFO_BAND_6        (1 << 2)
 #define IWINFO_BAND_60       (1 << 3)
+#define IWINFO_BAND_COUNT    4
 
 #define IWINFO_CIPHER_NONE    (1 << 0)
 #define IWINFO_CIPHER_WEP40   (1 << 1)
@@ -68,6 +69,7 @@
 #define IWINFO_FREQ_NO_160MHZ		(1 << 5)
 #define IWINFO_FREQ_NO_HE		(1 << 6)
 
+extern const char * const IWINFO_BAND_NAMES[IWINFO_BAND_COUNT];
 extern const char * const IWINFO_CIPHER_NAMES[IWINFO_CIPHER_COUNT];
 extern const char * const IWINFO_KMGMT_NAMES[IWINFO_KMGMT_COUNT];
 extern const char * const IWINFO_AUTH_NAMES[IWINFO_AUTH_COUNT];
