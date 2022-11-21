@@ -24,11 +24,11 @@
  */
 const char * const IWINFO_CIPHER_NAMES[IWINFO_CIPHER_COUNT] = {
 	"NONE",
-	"WEP40",
+	"WEP-40",
 	"TKIP",
 	"WRAP",
 	"CCMP",
-	"WEP104",
+	"WEP-104",
 	"AES-OCB",
 	"CKIP",
 	"GCMP",
