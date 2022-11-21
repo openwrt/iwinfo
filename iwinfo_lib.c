@@ -49,7 +49,7 @@ const char * const IWINFO_AUTH_NAMES[IWINFO_AUTH_COUNT] = {
 	"SHARED",
 };
 
-const char * const IWINFO_OPMODE_NAMES[] = {
+const char * const IWINFO_OPMODE_NAMES[IWINFO_OPMODE_COUNT] = {
 	"Unknown",
 	"Master",
 	"Ad-Hoc",

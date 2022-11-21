@@ -84,9 +84,11 @@ enum iwinfo_opmode {
 	IWINFO_OPMODE_MESHPOINT  = 7,
 	IWINFO_OPMODE_P2P_CLIENT = 8,
 	IWINFO_OPMODE_P2P_GO     = 9,
+
+	IWINFO_OPMODE_COUNT      = 10,
 };
 
-extern const char * const IWINFO_OPMODE_NAMES[];
+extern const char * const IWINFO_OPMODE_NAMES[IWINFO_OPMODE_COUNT];
 
 
 enum iwinfo_htmode {
