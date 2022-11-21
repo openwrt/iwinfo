@@ -3009,6 +3009,7 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 					    freqs[NL80211_FREQUENCY_ATTR_DISABLED])
 						continue;
 
+					e->band = nl80211_get_band(band->nla_type);
 					e->mhz = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
 					e->channel = nl80211_freq2channel(e->mhz);
 
