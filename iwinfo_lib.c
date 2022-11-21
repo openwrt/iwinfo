@@ -22,6 +22,16 @@
 /*
  * name constants
  */
+const char * const IWINFO_80211_NAMES[IWINFO_80211_COUNT] = {
+	"a",
+	"b",
+	"g",
+	"n",
+	"ac",
+	"ad",
+	"ax",
+};
+
 const char * const IWINFO_BAND_NAMES[IWINFO_BAND_COUNT] = {
 	"2.4 GHz",
 	"5 GHz",
