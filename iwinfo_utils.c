@@ -102,6 +102,48 @@ size_t iwinfo_format_hwmodes(int modes, char *buf, size_t len)
 	return res;
 }
 
+int iwinfo_htmode_is_ht(int htmode)
+{
+	switch (htmode)
+	{
+	case IWINFO_HTMODE_HT20:
+	case IWINFO_HTMODE_HT40:
+		return 1;
+	}
+
+	return 0;
+}
+
+int iwinfo_htmode_is_vht(int htmode)
+{
+	switch (htmode)
+	{
+	case IWINFO_HTMODE_VHT20:
+	case IWINFO_HTMODE_VHT40:
+	case IWINFO_HTMODE_VHT80:
+	case IWINFO_HTMODE_VHT80_80:
+	case IWINFO_HTMODE_VHT160:
+		return 1;
+	}
+
+	return 0;
+}
+
+int iwinfo_htmode_is_he(int htmode)
+{
+	switch (htmode)
+	{
+	case IWINFO_HTMODE_HE20:
+	case IWINFO_HTMODE_HE40:
+	case IWINFO_HTMODE_HE80:
+	case IWINFO_HTMODE_HE80_80:
+	case IWINFO_HTMODE_HE160:
+		return 1;
+	}
+
+	return 0;
+}
+
 int iwinfo_ifup(const char *ifname)
 {
 	struct ifreq ifr;

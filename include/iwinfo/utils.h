@@ -44,6 +44,9 @@ static inline int iwinfo_mbm2dbm(int gain)
 }
 
 size_t iwinfo_format_hwmodes(int modes, char *buf, size_t len);
+int iwinfo_htmode_is_ht(int htmode);
+int iwinfo_htmode_is_vht(int htmode);
+int iwinfo_htmode_is_he(int htmode);
 
 int iwinfo_ifup(const char *ifname);
 int iwinfo_ifdown(const char *ifname);
