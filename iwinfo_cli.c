@@ -533,6 +533,20 @@ static char * print_hwmodes(const struct iwinfo_ops *iw, const char *ifname)
 	return format_hwmodes(modes);
 }
 
+static const char *print_htmode(const struct iwinfo_ops *iw, const char *ifname)
+{
+	int mode;
+	const char *name;
+	if (iw->htmode(ifname, &mode))
+		mode = -1;
+
+	name = iwinfo_htmode_name(mode);
+	if (name)
+		return name;
+
+	return "unknown";
+}
+
 static char * print_mbssid_supp(const struct iwinfo_ops *iw, const char *ifname)
 {
 	int supp;
@@ -564,10 +578,11 @@ static void print_info(const struct iwinfo_ops *iw, const char *ifname)
 		print_ssid(iw, ifname));
 	printf("          Access Point: %s\n",
 		print_bssid(iw, ifname));
-	printf("          Mode: %s  Channel: %s (%s)\n",
+	printf("          Mode: %s  Channel: %s (%s)  HT Mode: %s\n",
 		print_mode(iw, ifname),
 		print_channel(iw, ifname),
-		print_frequency(iw, ifname));
+		print_frequency(iw, ifname),
+		print_htmode(iw, ifname));
 	if (iw->center_chan1 != NULL) {
 		printf("          Center Channel 1: %s",
 			print_center_chan1(iw, ifname));
