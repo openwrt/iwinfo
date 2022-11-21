@@ -68,9 +68,9 @@
 #define IWINFO_FREQ_NO_160MHZ		(1 << 5)
 #define IWINFO_FREQ_NO_HE		(1 << 6)
 
-extern const char *IWINFO_CIPHER_NAMES[IWINFO_CIPHER_COUNT];
-extern const char *IWINFO_KMGMT_NAMES[IWINFO_KMGMT_COUNT];
-extern const char *IWINFO_AUTH_NAMES[IWINFO_AUTH_COUNT];
+extern const char * const IWINFO_CIPHER_NAMES[IWINFO_CIPHER_COUNT];
+extern const char * const IWINFO_KMGMT_NAMES[IWINFO_KMGMT_COUNT];
+extern const char * const IWINFO_AUTH_NAMES[IWINFO_AUTH_COUNT];
 
 
 enum iwinfo_opmode {
@@ -86,7 +86,7 @@ enum iwinfo_opmode {
 	IWINFO_OPMODE_P2P_GO     = 9,
 };
 
-extern const char *IWINFO_OPMODE_NAMES[];
+extern const char * const IWINFO_OPMODE_NAMES[];
 
 
 enum iwinfo_htmode {
@@ -107,7 +107,7 @@ enum iwinfo_htmode {
 	IWINFO_HTMODE_COUNT      = 13
 };
 
-extern const char *IWINFO_HTMODE_NAMES[IWINFO_HTMODE_COUNT];
+extern const char * const IWINFO_HTMODE_NAMES[IWINFO_HTMODE_COUNT];
 
 
 struct iwinfo_rate_entry {
@@ -229,7 +229,7 @@ struct iwinfo_country_entry {
 
 struct iwinfo_iso3166_label {
 	uint16_t iso3166;
-	char name[28];
+	const char name[28];
 };
 
 struct iwinfo_hardware_id {

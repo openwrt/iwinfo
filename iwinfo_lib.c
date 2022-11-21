@@ -22,7 +22,7 @@
 /*
  * name constants
  */
-const char *IWINFO_CIPHER_NAMES[] = {
+const char * const IWINFO_CIPHER_NAMES[IWINFO_CIPHER_COUNT] = {
 	"NONE",
 	"WEP40",
 	"TKIP",
@@ -36,7 +36,7 @@ const char *IWINFO_CIPHER_NAMES[] = {
 	"GCMP-256",
 };
 
-const char *IWINFO_KMGMT_NAMES[] = {
+const char * const IWINFO_KMGMT_NAMES[IWINFO_KMGMT_COUNT] = {
 	"NONE",
 	"802.1X",
 	"PSK",
@@ -44,12 +44,12 @@ const char *IWINFO_KMGMT_NAMES[] = {
 	"OWE",
 };
 
-const char *IWINFO_AUTH_NAMES[] = {
+const char * const IWINFO_AUTH_NAMES[IWINFO_AUTH_COUNT] = {
 	"OPEN",
 	"SHARED",
 };
 
-const char *IWINFO_OPMODE_NAMES[] = {
+const char * const IWINFO_OPMODE_NAMES[] = {
 	"Unknown",
 	"Master",
 	"Ad-Hoc",
@@ -62,7 +62,7 @@ const char *IWINFO_OPMODE_NAMES[] = {
 	"P2P Go",
 };
 
-const char *IWINFO_HTMODE_NAMES[] = {
+const char * const IWINFO_HTMODE_NAMES[IWINFO_HTMODE_COUNT] = {
 	"HT20",
 	"HT40",
 	"VHT20",
