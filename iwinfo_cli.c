@@ -340,16 +340,21 @@ static char * format_assocrate(struct iwinfo_rate_entry *r)
 	return buf;
 }
 
-static const char* format_chan_width(uint16_t width)
+static const char* format_chan_width(bool vht, uint8_t width)
 {
-	switch (width) {
-		case 20: return "20 MHz";
-		case 2040: return "40 MHz and upper or 20 MHz with intolerant bit";
-		case 40: return "40 MHz or lower";
-		case 80: return "80 MHz";
-		case 8080: return "80+80 MHz";
-		case 160: return "160 MHz";
-	}
+	if (!vht && width < ARRAY_SIZE(ht_chan_width))
+		switch (ht_chan_width[width]) {
+			case 20: return "20 MHz";
+			case 2040: return "40 MHz or higher";
+		}
+
+	if (vht && width < ARRAY_SIZE(vht_chan_width))
+		switch (vht_chan_width[width]) {
+			case 40: return "20 or 40 MHz";
+			case 80: return "80 MHz";
+			case 8080: return "80+80 MHz";
+			case 160: return "160 MHz";
+		}
 
 	return "unknown";
 }
@@ -674,16 +679,16 @@ static void print_scanlist(const struct iwinfo_ops *iw, const char *ifname)
 		printf("                    Secondary Channel Offset: %s\n",
 			ht_secondary_offset[e->ht_chan_info.secondary_chan_off]);
 		printf("                    Channel Width: %s\n",
-			format_chan_width(e->ht_chan_info.chan_width));
+			format_chan_width(false, e->ht_chan_info.chan_width));
 
 		if (e->vht_chan_info.center_chan_1) {
 			printf("          VHT Operation:\n");
-			printf("                    Channel Width: %s\n",
-				format_chan_width(e->vht_chan_info.chan_width));
 			printf("                    Center Frequency 1: %d\n",
 				 e->vht_chan_info.center_chan_1);
 			printf("                    Center Frequency 2: %d\n",
 				 e->vht_chan_info.center_chan_2);
+			printf("                    Channel Width: %s\n",
+				format_chan_width(true, e->vht_chan_info.chan_width));
 		}
 
 		printf("\n");
