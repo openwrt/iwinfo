@@ -814,7 +814,7 @@ static void print_htmodelist(const struct iwinfo_ops *iw, const char *ifname)
 		return;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(IWINFO_HTMODE_NAMES); i++)
+	for (i = 0; i < IWINFO_HTMODE_COUNT; i++)
 		if (htmodes & (1 << i))
 			printf("%s ", IWINFO_HTMODE_NAMES[i]);
 
