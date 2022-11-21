@@ -160,21 +160,11 @@ static char * format_enc_suites(int suites)
 {
 	static char str[64] = { 0 };
 	char *pos = str;
+	int i;
 
-	if (suites & IWINFO_KMGMT_PSK)
-		pos += sprintf(pos, "PSK/");
-
-	if (suites & IWINFO_KMGMT_8021x)
-		pos += sprintf(pos, "802.1X/");
-
-	if (suites & IWINFO_KMGMT_SAE)
-		pos += sprintf(pos, "SAE/");
-
-	if (suites & IWINFO_KMGMT_OWE)
-		pos += sprintf(pos, "OWE/");
-
-	if (!suites || (suites & IWINFO_KMGMT_NONE))
-		pos += sprintf(pos, "NONE/");
+	for (i = 0; i < IWINFO_KMGMT_COUNT; i++)
+		if (suites & (1 << i))
+			pos += sprintf(pos, "%s/", IWINFO_KMGMT_NAMES[i]);
 
 	*(pos - 1) = 0;
 
