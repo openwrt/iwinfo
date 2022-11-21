@@ -145,39 +145,11 @@ static char * format_enc_ciphers(int ciphers)
 {
 	static char str[128] = { 0 };
 	char *pos = str;
+	int i;
 
-	if (ciphers & IWINFO_CIPHER_WEP40)
-		pos += sprintf(pos, "WEP-40, ");
-
-	if (ciphers & IWINFO_CIPHER_WEP104)
-		pos += sprintf(pos, "WEP-104, ");
-
-	if (ciphers & IWINFO_CIPHER_TKIP)
-		pos += sprintf(pos, "TKIP, ");
-
-	if (ciphers & IWINFO_CIPHER_CCMP)
-		pos += sprintf(pos, "CCMP, ");
-
-	if (ciphers & IWINFO_CIPHER_CCMP256)
-		pos += sprintf(pos, "CCMP-256, ");
-
-	if (ciphers & IWINFO_CIPHER_GCMP)
-		pos += sprintf(pos, "GCMP, ");
-
-	if (ciphers & IWINFO_CIPHER_GCMP256)
-		pos += sprintf(pos, "GCMP-256, ");
-
-	if (ciphers & IWINFO_CIPHER_WRAP)
-		pos += sprintf(pos, "WRAP, ");
-
-	if (ciphers & IWINFO_CIPHER_AESOCB)
-		pos += sprintf(pos, "AES-OCB, ");
-
-	if (ciphers & IWINFO_CIPHER_CKIP)
-		pos += sprintf(pos, "CKIP, ");
-
-	if (!ciphers || (ciphers & IWINFO_CIPHER_NONE))
-		pos += sprintf(pos, "NONE, ");
+	for (i = 0; i < IWINFO_CIPHER_COUNT; i++)
+		if (ciphers & (1 << i))
+			pos += sprintf(pos, "%s, ", IWINFO_CIPHER_NAMES[i]);
 
 	*(pos - 2) = 0;
 
