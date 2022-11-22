@@ -115,6 +115,40 @@ const char * const iwinfo_htmode_name(int mask)
 	return iwinfo_name(mask, IWINFO_HTMODE_COUNT, IWINFO_HTMODE_NAMES);
 }
 
+uint32_t iwinfo_band2ghz(uint8_t band)
+{
+	switch (band)
+	{
+	case IWINFO_BAND_24:
+		return 2;
+	case IWINFO_BAND_5:
+		return 5;
+	case IWINFO_BAND_6:
+		return 6;
+	case IWINFO_BAND_60:
+		return 60;
+	}
+
+	return 0;
+}
+
+uint8_t iwinfo_ghz2band(uint32_t ghz)
+{
+	switch (ghz)
+	{
+	case 2:
+		return IWINFO_BAND_24;
+	case 5:
+		return IWINFO_BAND_5;
+	case 6:
+		return IWINFO_BAND_6;
+	case 60:
+		return IWINFO_BAND_60;
+	}
+
+	return 0;
+}
+
 size_t iwinfo_format_hwmodes(int modes, char *buf, size_t len)
 {
 	// bit numbers as per IWINFO_80211_*:  ad ac ax  a  b  g  n

@@ -46,6 +46,9 @@ static inline int iwinfo_mbm2dbm(int gain)
 const char * const iwinfo_band_name(int mask);
 const char * const iwinfo_htmode_name(int mask);
 
+uint32_t iwinfo_band2ghz(uint8_t band);
+uint8_t iwinfo_ghz2band(uint32_t ghz);
+
 size_t iwinfo_format_hwmodes(int modes, char *buf, size_t len);
 int iwinfo_htmode_is_ht(int htmode);
 int iwinfo_htmode_is_vht(int htmode);
