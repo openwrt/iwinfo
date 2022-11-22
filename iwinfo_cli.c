@@ -44,6 +44,17 @@ static char * format_ssid(char *ssid)
 	return buf;
 }
 
+static const char *format_band(int band)
+{
+	const char *name;
+
+	name = iwinfo_band_name(band);
+	if (name)
+		return name;
+
+	return "unknown";
+}
+
 static char * format_channel(int ch)
 {
 	static char buf[16];
@@ -729,9 +740,10 @@ static void print_freqlist(const struct iwinfo_ops *iw, const char *ifname)
 	{
 		e = (struct iwinfo_freqlist_entry *) &buf[i];
 
-		printf("%s %s (Channel %s)%s\n",
+		printf("%s %s (Band: %s, Channel %s)%s\n",
 			(freq == e->mhz) ? "*" : " ",
 			format_frequency(e->mhz),
+			format_band(e->band),
 			format_channel(e->channel),
 			e->restricted ? " [restricted]" : "");
 	}
