@@ -77,6 +77,44 @@ int iwinfo_mw2dbm(int in)
 	return (int)res;
 }
 
+static int iwinfo_bit(int value, int max)
+{
+	int i;
+
+	if (max > 31 || !(value & ((1 << max) - 1)))
+		return -1;
+
+	for (i = 0; i < max; i++)
+	{
+		if (value & 1)
+			break;
+
+		value >>= 1;
+	}
+
+	return i;
+}
+
+static const char * const iwinfo_name(int mask, int max, const char * const names[])
+{
+	int index = iwinfo_bit(mask, max);
+
+	if (index < 0)
+		return NULL;
+
+	return names[index];
+}
+
+const char * const iwinfo_band_name(int mask)
+{
+	return iwinfo_name(mask, IWINFO_BAND_COUNT, IWINFO_BAND_NAMES);
+}
+
+const char * const iwinfo_htmode_name(int mask)
+{
+	return iwinfo_name(mask, IWINFO_HTMODE_COUNT, IWINFO_HTMODE_NAMES);
+}
+
 size_t iwinfo_format_hwmodes(int modes, char *buf, size_t len)
 {
 	// bit numbers as per IWINFO_80211_*:  ad ac ax  a  b  g  n
