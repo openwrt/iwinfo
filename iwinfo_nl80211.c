@@ -3052,7 +3052,7 @@ struct nl80211_modes
 	uint16_t he_phy_cap[6];
 };
 
-static int nl80211_eval_modelist(struct nl80211_modes *m)
+static void nl80211_eval_modelist(struct nl80211_modes *m)
 {
 	/* Treat any nonzero capability as 11n */
 	if (m->nl_ht > 0)
