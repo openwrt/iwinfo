@@ -1095,7 +1095,6 @@ static char * nl80211_ifadd(const char *ifname)
 static void nl80211_ifdel(const char *ifname)
 {
 	struct nl80211_msg_conveyor *req;
-	int err;
 
 	req = nl80211_msg(ifname, NL80211_CMD_DEL_INTERFACE, 0);
 	if (req)
@@ -2371,7 +2370,6 @@ static int nl80211_get_txpwrlist(const char *ifname, char *buf, int *len)
 {
 	int err, ch_cur;
 	int dbm_max = -1, dbm_cur, dbm_cnt;
-	struct nl80211_msg_conveyor *req;
 	struct iwinfo_txpwrlist_entry entry;
 
 	if (nl80211_get_channel(ifname, &ch_cur))
@@ -3119,8 +3117,6 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 {
 	struct nl80211_modes *m = arg;
 	int bands_remain, freqs_remain;
-	uint16_t caps = 0;
-	uint32_t vht_caps = 0;
 	struct nlattr **attr = nl80211_parse(msg);
 	struct nlattr *bands[NL80211_BAND_ATTR_MAX + 1];
 	struct nlattr *freqs[NL80211_FREQUENCY_ATTR_MAX + 1];
@@ -3390,7 +3386,6 @@ static int nl80211_get_mbssid_support(const char *ifname, int *buf)
 static int nl80211_hardware_id_from_fdt(struct iwinfo_hardware_id *id, const char *ifname)
 {
 	char *phy, compat[64], path[PATH_MAX];
-	int i;
 
 	/* Try to determine the phy name from the given interface */
 	phy = nl80211_ifname2phy(ifname);
