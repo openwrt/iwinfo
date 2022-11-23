@@ -1,7 +1,7 @@
 IWINFO_SOVERSION   = $(if $(SOVERSION),$(SOVERSION),0)
 
 IWINFO_BACKENDS    = $(BACKENDS)
-IWINFO_CFLAGS      = $(CFLAGS) -std=gnu99 -fstrict-aliasing -Iinclude
+IWINFO_CFLAGS      = $(CFLAGS) -Wall -std=gnu99 -fstrict-aliasing -Iinclude
 IWINFO_LDFLAGS     = -luci -lubox -lubus
 
 IWINFO_LIB         = libiwinfo.so
