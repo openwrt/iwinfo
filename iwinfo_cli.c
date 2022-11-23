@@ -254,10 +254,12 @@ static char * format_encryption(struct iwinfo_crypto_entry *c)
 
 			for (i = 0; i < 3; i++)
 				if (c->wpa_version & (1 << i))
+				{
 					if (i)
 						pos += sprintf(pos, "WPA%d/", i + 1);
 					else
 						pos += sprintf(pos, "WPA/");
+				}
 
 			pos--;
 
