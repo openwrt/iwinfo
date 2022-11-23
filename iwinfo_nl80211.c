@@ -2899,6 +2899,8 @@ static int nl80211_get_scanlist(const char *ifname, char *buf, int *len)
 				iwinfo_ifup(ifname);
 				nl80211_hostapd_hup(ifname);
 			}
+			else
+				rv = -1;
 
 			nl80211_ifdel(res);
 			return rv;
