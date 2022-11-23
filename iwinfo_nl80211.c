@@ -1234,7 +1234,7 @@ static int nl80211_get_ssid(const char *ifname, char *buf)
 	/* failed, try to obtain Mesh ID */
 	if (sb.ssid[0] == 0)
 		iwinfo_ubus_query(res ? res : ifname, "mesh_id",
-		                  sb.ssid, IWINFO_ESSID_MAX_SIZE + 1);
+		                  buf, IWINFO_ESSID_MAX_SIZE + 1);
 
 	return (sb.ssid[0] == 0) ? -1 : 0;
 }
