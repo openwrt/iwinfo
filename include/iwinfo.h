@@ -199,25 +199,15 @@ struct iwinfo_scanlist_vht_chan_entry {
 	uint8_t center_chan_2;
 };
 
-static const char *ht_secondary_offset[4] = {
-	"no secondary",
-	"above",
-	"[reserved!]",
-	"below",
-};
-
-
-static uint16_t ht_chan_width[2] = {
-	20, /* 20 MHz */
-	2040, /* 40 MHz or higher (refer to vht if supported) */
-};
-
-static uint16_t vht_chan_width[] = {
-	[0] = 40, /* 40 MHz or lower (refer to ht to a more precise width) */
-	[1] = 80, /* 80 MHz */
-	[3] = 8080, /* 80+80 MHz */
-	[2] = 160, /* 160 MHz */
-};
+extern const char * const ht_secondary_offset[4];
+/* 0 = 20 MHz
+   1 = 40 MHz or higher (refer to vht if supported) */
+extern const uint16_t ht_chan_width[2];
+/* 0 = 40 MHz or lower (refer to ht to a more precise width)
+   1 = 80 MHz
+   2 = 160 MHz
+   3 = 80+80 MHz */
+extern const uint16_t vht_chan_width[4];
 
 struct iwinfo_scanlist_entry {
 	uint8_t mac[6];

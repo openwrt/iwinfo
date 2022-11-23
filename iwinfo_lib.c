@@ -78,6 +78,24 @@ const char *IWINFO_HTMODE_NAMES[] = {
 	"HE160"
 };
 
+const char * const ht_secondary_offset[4] = {
+	"no secondary",
+	"above",
+	"[reserved!]",
+	"below",
+};
+
+const uint16_t ht_chan_width[2] = {
+	20,
+	2040,
+};
+
+const uint16_t vht_chan_width[4] = {
+	40, /* 40 MHz or lower (refer to ht to a more precise width) */
+	80, /* 80 MHz */
+	160, /* 160 MHz */
+	8080, /* 80+80 MHz */
+};
 
 /*
  * ISO3166 country labels
