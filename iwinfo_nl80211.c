@@ -742,6 +742,20 @@ static int nl80211_channel2freq(int channel, const char *band, bool ax)
 	return 0;
 }
 
+static uint8_t nl80211_freq2band(int freq)
+{
+	if (freq >= 2412 && freq <= 2484)
+		return IWINFO_BAND_24;
+	else if (freq >= 5160 && freq <= 5885)
+		return IWINFO_BAND_5;
+	else if (freq >= 5925 && freq <= 7125)
+		return IWINFO_BAND_6;
+	else if (freq >= 58320 && freq <= 69120)
+		return IWINFO_BAND_60;
+
+	return 0;
+}
+
 static int nl80211_phyname_cb(struct nl_msg *msg, void *arg)
 {
 	char *buf = arg;
@@ -2619,8 +2633,11 @@ static int nl80211_get_scanlist_cb(struct nl_msg *msg, void *arg)
 		sl->e->crypto.enabled = 1;
 
 	if (bss[NL80211_BSS_FREQUENCY])
-		sl->e->channel = nl80211_freq2channel(nla_get_u32(
-			bss[NL80211_BSS_FREQUENCY]));
+	{
+		sl->e->mhz = nla_get_u32(bss[NL80211_BSS_FREQUENCY]);
+		sl->e->band = nl80211_freq2band(sl->e->mhz);
+		sl->e->channel = nl80211_freq2channel(sl->e->mhz);
+	}
 
 	if (bss[NL80211_BSS_INFORMATION_ELEMENTS])
 		nl80211_get_scanlist_ie(bss, sl->e);
@@ -2842,7 +2859,9 @@ static int nl80211_get_scanlist_wpactl(const char *ifname, char *buf, int *len)
 				e->mode = IWINFO_OPMODE_MASTER;
 
 			/* Channel */
-			e->channel = nl80211_freq2channel(atoi(freq));
+			e->mhz = atoi(freq);
+			e->band = nl80211_freq2band(e->mhz);
+			e->channel = nl80211_freq2channel(e->mhz);
 
 			/* Signal */
 			rssi = atoi(signal);

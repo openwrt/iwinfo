@@ -313,7 +313,9 @@ struct iwinfo_scanlist_entry {
 	uint8_t mac[6];
 	char ssid[IWINFO_ESSID_MAX_SIZE+1];
 	enum iwinfo_opmode mode;
+	uint8_t band;
 	uint8_t channel;
+	uint32_t mhz;
 	uint8_t signal;
 	uint8_t quality;
 	uint8_t quality_max;
