@@ -659,8 +659,10 @@ static void print_scanlist(const struct iwinfo_ops *iw, const char *ifname)
 			format_bssid(e->mac));
 		printf("          ESSID: %s\n",
 			format_ssid(e->ssid));
-		printf("          Mode: %s  Channel: %s\n",
+		printf("          Mode: %s  Frequency: %s  Band: %s  Channel: %s\n",
 			IWINFO_OPMODE_NAMES[e->mode],
+			format_frequency(e->mhz),
+			format_band(e->band),
 			format_channel(e->channel));
 		printf("          Signal: %s  Quality: %s/%s\n",
 			format_signal(e->signal - 0x100),
