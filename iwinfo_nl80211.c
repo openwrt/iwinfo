@@ -3468,7 +3468,9 @@ static int nl80211_get_hardware_id(const char *ifname, char *buf)
 		{ "vendor", &id->vendor_id },
 		{ "device", &id->device_id },
 		{ "subsystem_vendor", &id->subsystem_vendor_id },
-		{ "subsystem_device", &id->subsystem_device_id }
+		{ "subsystem_device", &id->subsystem_device_id },
+		{ "../idVendor", &id->subsystem_vendor_id },
+		{ "../idProduct", &id->subsystem_device_id }
 	};
 
 	memset(id, 0, sizeof(*id));
@@ -3487,12 +3489,14 @@ static int nl80211_get_hardware_id(const char *ifname, char *buf)
 	}
 
 	/* Failed to obtain hardware IDs, try FDT */
-	if (id->vendor_id == 0 || id->device_id == 0)
+	if (id->vendor_id == 0 && id->device_id == 0 &&
+	    id->subsystem_vendor_id == 0 && id->subsystem_device_id == 0)
 		if (!nl80211_hardware_id_from_fdt(id, ifname))
 			return 0;
 
 	/* Failed to obtain hardware IDs, search board config */
-	if (id->vendor_id == 0 || id->device_id == 0)
+	if (id->vendor_id == 0 && id->device_id == 0 &&
+	    id->subsystem_vendor_id == 0 && id->subsystem_device_id == 0)
 		return iwinfo_hardware_id_from_mtd(id);
 
 	return 0;
