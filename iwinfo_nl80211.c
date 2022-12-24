@@ -367,7 +367,7 @@ static int nl80211_phy_idx_from_macaddr(const char *opt)
 	if (!opt)
 		return -1;
 
-	snprintf(buf, sizeof(buf), "/sys/class/ieee80211/*");	/**/
+	snprintf(buf, sizeof(buf), "/sys/class/ieee80211/*");
 	if (glob(buf, 0, NULL, &gl))
 		return -1;
 
@@ -813,7 +813,7 @@ static char * nl80211_phy2ifname(const char *ifname)
 	DIR *d;
 	struct dirent *e;
 
-	/* Only accept phy name of the form phy%d or radio%d */
+	/* Only accept phy name in the form of phy%d or radio%d */
 	if (!ifname)
 		return NULL;
 
@@ -868,7 +868,7 @@ static int nl80211_get_mode_cb(struct nl_msg *msg, void *arg)
 		IWINFO_OPMODE_CLIENT,		/* managed */
 		IWINFO_OPMODE_MASTER,		/* AP */
 		IWINFO_OPMODE_AP_VLAN,		/* AP/VLAN */
-		IWINFO_OPMODE_WDS,			/* WDS */
+		IWINFO_OPMODE_WDS,		/* WDS */
 		IWINFO_OPMODE_MONITOR,		/* monitor */
 		IWINFO_OPMODE_MESHPOINT,	/* mesh point */
 		IWINFO_OPMODE_P2P_CLIENT,	/* P2P-client */
@@ -2564,7 +2564,7 @@ static void nl80211_get_scanlist_ie(struct nlattr **bss,
 				iwinfo_parse_rsn(&e->crypto, ie + 6, ie[1] - 4,
 				                 IWINFO_CIPHER_TKIP, IWINFO_KMGMT_PSK);
 			break;
-		case 61: /* HT oeration */
+		case 61: /* HT operation */
 			if (ie[1] >= 3) {
 				e->ht_chan_info.primary_chan = ie[2];
 				e->ht_chan_info.secondary_chan_off = ie[3] & 0x3;
