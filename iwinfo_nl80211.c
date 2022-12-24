@@ -807,10 +807,9 @@ nla_put_failure:
 
 static char * nl80211_phy2ifname(const char *ifname)
 {
-	int ifidx = -1, cifidx = -1, phyidx = -1;
+	int ifidx = -1, cifidx, lmode = 1, clmode, phyidx;
 	char buffer[512];
 	static char nif[IFNAMSIZ] = { 0 };
-
 	DIR *d;
 	struct dirent *e;
 
@@ -835,11 +834,20 @@ static char * nl80211_phy2ifname(const char *ifname)
 		{
 			snprintf(buffer, sizeof(buffer),
 			         "/sys/class/net/%s/ifindex", e->d_name);
+			cifidx = nl80211_readint(buffer);
 
-			if ((cifidx = nl80211_readint(buffer)) >= 0 &&
-			    ((ifidx < 0) || (cifidx < ifidx)))
+			if (cifidx < 0)
+				continue;
+
+			snprintf(buffer, sizeof(buffer),
+			         "/sys/class/net/%s/link_mode", e->d_name);
+			clmode = nl80211_readint(buffer);
+
+			/* prefer non-supplicant-based devices */
+			if ((ifidx < 0) || (cifidx < ifidx) || ((lmode == 1) && (clmode != 1)))
 			{
 				ifidx = cifidx;
+				lmode = clmode;
 				strncpy(nif, e->d_name, sizeof(nif) - 1);
 			}
 		}
