@@ -826,31 +826,28 @@ static char * nl80211_phy2ifname(const char *ifname)
 
 	memset(nif, 0, sizeof(nif));
 
-	if (phyidx > -1)
+	if ((d = opendir("/sys/class/net")) != NULL)
 	{
-		if ((d = opendir("/sys/class/net")) != NULL)
+		while ((e = readdir(d)) != NULL)
 		{
-			while ((e = readdir(d)) != NULL)
+			snprintf(buffer, sizeof(buffer),
+			         "/sys/class/net/%s/phy80211/index", e->d_name);
+
+			if (nl80211_readint(buffer) == phyidx)
 			{
 				snprintf(buffer, sizeof(buffer),
-				         "/sys/class/net/%s/phy80211/index", e->d_name);
+				         "/sys/class/net/%s/ifindex", e->d_name);
 
-				if (nl80211_readint(buffer) == phyidx)
+				if ((cifidx = nl80211_readint(buffer)) >= 0 &&
+				    ((ifidx < 0) || (cifidx < ifidx)))
 				{
-					snprintf(buffer, sizeof(buffer),
-					         "/sys/class/net/%s/ifindex", e->d_name);
-
-					if ((cifidx = nl80211_readint(buffer)) >= 0 &&
-					    ((ifidx < 0) || (cifidx < ifidx)))
-					{
-						ifidx = cifidx;
-						strncpy(nif, e->d_name, sizeof(nif) - 1);
-					}
+					ifidx = cifidx;
+					strncpy(nif, e->d_name, sizeof(nif) - 1);
 				}
 			}
-
-			closedir(d);
 		}
+
+		closedir(d);
 	}
 
 	return nif[0] ? nif : NULL;
