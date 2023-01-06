@@ -3491,6 +3491,11 @@ static int nl80211_hardware_id_from_fdt(struct iwinfo_hardware_id *id, const cha
 		id->device_id = 0x003c;
 		id->subsystem_vendor_id = 0x168c;
 		id->subsystem_device_id = 0x4019;
+	} else if (!strcmp(compat, "qcom,ipq8074-wifi")) {
+		id->vendor_id = 0x168c;
+		id->device_id = 0x8074;
+		id->subsystem_vendor_id = 0x168c;
+		id->subsystem_device_id = 0x8074;
 	} else if (!strcmp(compat, "mediatek,mt7622-wmac")) {
 		id->vendor_id = 0x14c3;
 		id->device_id = 0x7622;
