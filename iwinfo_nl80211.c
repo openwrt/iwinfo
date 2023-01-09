@@ -3445,7 +3445,7 @@ static int nl80211_get_mbssid_support(const char *ifname, int *buf)
 
 static int nl80211_hardware_id_from_fdt(struct iwinfo_hardware_id *id, const char *ifname)
 {
-	char *phy, compat[64], path[PATH_MAX];
+	char *phy, path[PATH_MAX];
 
 	/* Try to determine the phy name from the given interface */
 	phy = nl80211_ifname2phy(ifname);
@@ -3453,62 +3453,10 @@ static int nl80211_hardware_id_from_fdt(struct iwinfo_hardware_id *id, const cha
 	snprintf(path, sizeof(path), "/sys/class/%s/%s/device/of_node/compatible",
 	         phy ? "ieee80211" : "net", phy ? phy : ifname);
 
-	if (nl80211_readstr(path, compat, sizeof(compat)) <= 0)
+	if (nl80211_readstr(path, id->compatible, sizeof(id->compatible)) <= 0)
 		return -1;
 
-	if (!strcmp(compat, "qca,ar9130-wmac")) {
-		id->vendor_id = 0x168c;
-		id->device_id = 0x0029;
-		id->subsystem_vendor_id = 0x168c;
-		id->subsystem_device_id = 0x9130;
-	} else if (!strcmp(compat, "qca,ar9330-wmac")) {
-		id->vendor_id = 0x168c;
-		id->device_id = 0x0030;
-		id->subsystem_vendor_id = 0x168c;
-		id->subsystem_device_id = 0x9330;
-	} else if (!strcmp(compat, "qca,ar9340-wmac")) {
-		id->vendor_id = 0x168c;
-		id->device_id = 0x0030;
-		id->subsystem_vendor_id = 0x168c;
-		id->subsystem_device_id = 0x9340;
-	} else if (!strcmp(compat, "qca,qca9530-wmac")) {
-		id->vendor_id = 0x168c;
-		id->device_id = 0x0033;
-		id->subsystem_vendor_id = 0x168c;
-		id->subsystem_device_id = 0x9530;
-	} else if (!strcmp(compat, "qca,qca9550-wmac")) {
-		id->vendor_id = 0x168c;
-		id->device_id = 0x0033;
-		id->subsystem_vendor_id = 0x168c;
-		id->subsystem_device_id = 0x9550;
-	} else if (!strcmp(compat, "qca,qca9560-wmac")) {
-		id->vendor_id = 0x168c;
-		id->device_id = 0x0033;
-		id->subsystem_vendor_id = 0x168c;
-		id->subsystem_device_id = 0x9560;
-	} else if (!strcmp(compat, "qcom,ipq4019-wifi")) {
-		id->vendor_id = 0x168c;
-		id->device_id = 0x003c;
-		id->subsystem_vendor_id = 0x168c;
-		id->subsystem_device_id = 0x4019;
-	} else if (!strcmp(compat, "qcom,ipq8074-wifi")) {
-		id->vendor_id = 0x168c;
-		id->device_id = 0x8074;
-		id->subsystem_vendor_id = 0x168c;
-		id->subsystem_device_id = 0x8074;
-	} else if (!strcmp(compat, "mediatek,mt7622-wmac")) {
-		id->vendor_id = 0x14c3;
-		id->device_id = 0x7622;
-		id->subsystem_vendor_id = 0x14c3;
-		id->subsystem_device_id = 0x7622;
-	} else if (!strcmp(compat, "mediatek,mt7986-wmac")) {
-		id->vendor_id = 0x14c3;
-		id->device_id = 0x7986;
-		id->subsystem_vendor_id = 0x14c3;
-		id->subsystem_device_id = 0x7986;
-	}
-
-	return (id->vendor_id && id->device_id) ? 0 : -1;
+	return 0;
 }
 
 
@@ -3542,16 +3490,13 @@ static int nl80211_get_hardware_id(const char *ifname, char *buf)
 			*lookup[i].dest = strtoul(num, NULL, 16);
 	}
 
-	/* Failed to obtain hardware IDs, try FDT */
+	/* Failed to obtain hardware PCI/USB IDs... */
 	if (id->vendor_id == 0 && id->device_id == 0 &&
 	    id->subsystem_vendor_id == 0 && id->subsystem_device_id == 0)
-		if (!nl80211_hardware_id_from_fdt(id, ifname))
-			return 0;
-
-	/* Failed to obtain hardware IDs, search board config */
-	if (id->vendor_id == 0 && id->device_id == 0 &&
-	    id->subsystem_vendor_id == 0 && id->subsystem_device_id == 0)
-		return iwinfo_hardware_id_from_mtd(id);
+		/* ... first fallback to FDT ... */
+		if (nl80211_hardware_id_from_fdt(id, ifname) == -1)
+			/* ... then board config */
+			return iwinfo_hardware_id_from_mtd(id);
 
 	return 0;
 }

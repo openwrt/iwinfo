@@ -243,6 +243,7 @@ struct iwinfo_hardware_id {
 	uint16_t device_id;
 	uint16_t subsystem_vendor_id;
 	uint16_t subsystem_device_id;
+	char compatible[128];
 };
 
 struct iwinfo_hardware_entry {
@@ -254,6 +255,7 @@ struct iwinfo_hardware_entry {
 	uint16_t subsystem_device_id;
 	int16_t txpower_offset;
 	int16_t frequency_offset;
+	char compatible[128];
 };
 
 extern const struct iwinfo_iso3166_label IWINFO_ISO3166_NAMES[];

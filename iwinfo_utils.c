@@ -286,7 +286,10 @@ struct iwinfo_hardware_entry * iwinfo_hardware(struct iwinfo_hardware_id *id)
 			       &e.vendor_id, &e.device_id,
 			       &e.subsystem_vendor_id, &e.subsystem_device_id,
 			       &e.txpower_offset, &e.frequency_offset,
-			       e.vendor_name, e.device_name) < 8)
+			       e.vendor_name, e.device_name) != 8 &&
+			sscanf(buf, "\"%127[^\"]\" %hd %hd \"%63[^\"]\" \"%63[^\"]\"",
+			       e.compatible, &e.txpower_offset, &e.frequency_offset,
+			       e.vendor_name, e.device_name) != 5)
 			continue;
 
 		if ((e.vendor_id != 0xffff) && (e.vendor_id != id->vendor_id))
@@ -301,6 +304,9 @@ struct iwinfo_hardware_entry * iwinfo_hardware(struct iwinfo_hardware_id *id)
 
 		if ((e.subsystem_device_id != 0xffff) &&
 			(e.subsystem_device_id != id->subsystem_device_id))
+			continue;
+
+		if (strcmp(e.compatible, id->compatible))
 			continue;
 
 		rv = &e;

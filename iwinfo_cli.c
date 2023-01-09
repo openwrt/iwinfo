@@ -335,9 +335,12 @@ static char * print_hardware_id(const struct iwinfo_ops *iw, const char *ifname)
 
 	if (!iw->hardware_id(ifname, (char *)&ids))
 	{
-		snprintf(buf, sizeof(buf), "%04X:%04X %04X:%04X",
-			ids.vendor_id, ids.device_id,
-			ids.subsystem_vendor_id, ids.subsystem_device_id);
+		if (strlen(ids.compatible) > 0)
+			snprintf(buf, sizeof(buf), "embedded");
+		else
+			snprintf(buf, sizeof(buf), "%04X:%04X %04X:%04X",
+				ids.vendor_id, ids.device_id,
+				ids.subsystem_vendor_id, ids.subsystem_device_id);
 	}
 	else
 	{
