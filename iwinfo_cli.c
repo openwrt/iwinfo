@@ -79,6 +79,25 @@ static char * format_frequency(int freq)
 	return buf;
 }
 
+static char * format_freqflags(uint32_t flags)
+{
+	static char str[512] = "[";
+	char *pos = str + 1;
+	int i;
+
+	if (!flags)
+		return "";
+
+	for (i = 0; i < IWINFO_FREQ_FLAG_COUNT; i++)
+		if (flags & (1 << i))
+			pos += sprintf(pos, "%s, ", IWINFO_FREQ_FLAG_NAMES[i]);
+
+	*(pos - 2) = ']';
+	*(pos - 1) = 0;
+
+	return str;
+}
+
 static char * format_txpower(int pwr)
 {
 	static char buf[16];
@@ -742,12 +761,12 @@ static void print_freqlist(const struct iwinfo_ops *iw, const char *ifname)
 	{
 		e = (struct iwinfo_freqlist_entry *) &buf[i];
 
-		printf("%s %s (Band: %s, Channel %s)%s\n",
+		printf("%s %s (Band: %s, Channel %s) %s\n",
 			(freq == e->mhz) ? "*" : " ",
 			format_frequency(e->mhz),
 			format_band(e->band),
 			format_channel(e->channel),
-			e->restricted ? " [restricted]" : "");
+			format_freqflags(e->flags));
 	}
 }
 
