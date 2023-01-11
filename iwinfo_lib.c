@@ -95,6 +95,18 @@ const char * const IWINFO_HTMODE_NAMES[IWINFO_HTMODE_COUNT] = {
 	"HE160"
 };
 
+const char * const IWINFO_FREQ_FLAG_NAMES[IWINFO_FREQ_FLAG_COUNT] = {
+	"NO_10MHZ",
+	"NO_20MHZ",
+	"NO_HT40+",
+	"NO_HT40-",
+	"NO_80MHZ",
+	"NO_160MHZ",
+	"NO_HE",
+	"NO_IR",
+	"INDOOR_ONLY",
+};
+
 const char * const ht_secondary_offset[4] = {
 	"no secondary",
 	"above",

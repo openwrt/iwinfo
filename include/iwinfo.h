@@ -153,6 +153,8 @@ enum iwinfo_freq_flag {
 #define IWINFO_FREQ_NO_IR          (1 << IWINFO_FREQ_NO_IR)
 #define IWINFO_FREQ_INDOOR_ONLY    (1 << IWINFO_FREQ_INDOOR_ONLY)
 
+extern const char * const IWINFO_FREQ_FLAG_NAMES[IWINFO_FREQ_FLAG_COUNT];
+
 
 enum iwinfo_opmode {
 	IWINFO_OPMODE_UNKNOWN = 0,
