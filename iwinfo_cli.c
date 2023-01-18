@@ -337,6 +337,10 @@ static char * print_hardware_id(const struct iwinfo_ops *iw, const char *ifname)
 	{
 		if (strlen(ids.compatible) > 0)
 			snprintf(buf, sizeof(buf), "embedded");
+		else if (ids.vendor_id == 0 && ids.device_id == 0 &&
+			 ids.subsystem_vendor_id != 0 && ids.subsystem_device_id != 0)
+			snprintf(buf, sizeof(buf), "USB %04X:%04X",
+				ids.subsystem_vendor_id, ids.subsystem_device_id);
 		else
 			snprintf(buf, sizeof(buf), "%04X:%04X %04X:%04X",
 				ids.vendor_id, ids.device_id,
