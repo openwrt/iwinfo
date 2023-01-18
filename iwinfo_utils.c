@@ -280,6 +280,9 @@ struct iwinfo_hardware_entry * iwinfo_hardware(struct iwinfo_hardware_id *id)
 
 	while (fgets(buf, sizeof(buf) - 1, db) != NULL)
 	{
+		if (buf[0] == '#')
+			continue;
+
 		memset(&e, 0, sizeof(e));
 
 		if (sscanf(buf, "%hx %hx %hx %hx %hd %hd \"%63[^\"]\" \"%63[^\"]\"",
