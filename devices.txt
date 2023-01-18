@@ -208,4 +208,5 @@
 "qcom,ipq4019-wifi"     0      0  "Qualcomm Atheros" "IPQ4019"
 "qcom,ipq8074-wifi"     0      0  "Qualcomm Atheros" "IPQ8074"
 "mediatek,mt7622-wmac"  0      0  "MediaTek" "MT7622"
+"mediatek,mt7628-wmac"  0      0  "MediaTek" "MT7628"
 "mediatek,mt7986-wmac"  0      0  "MediaTek" "MT7986"
