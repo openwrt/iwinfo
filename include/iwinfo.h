@@ -125,6 +125,9 @@ enum iwinfo_auth {
 	IWINFO_AUTH_COUNT
 };
 
+#define IWINFO_AUTH_OPEN     (1 << IWINFO_AUTH_OPEN)
+#define IWINFO_AUTH_SHARED   (1 << IWINFO_AUTH_SHARED)
+
 extern const char * const IWINFO_AUTH_NAMES[IWINFO_AUTH_COUNT];
 
 
