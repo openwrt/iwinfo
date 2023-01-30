@@ -825,13 +825,15 @@ static char * nl80211_phy2ifname(const char *ifname)
 
 	memset(nif, 0, sizeof(nif));
 
-	snprintf(buffer, sizeof(buffer),
-	         "/sys/class/ieee80211/phy%d/device/net", phyidx);
-
-	if ((d = opendir(buffer)) != NULL)
+	if ((d = opendir("/sys/class/net")) != NULL)
 	{
 		while ((e = readdir(d)) != NULL)
 		{
+			snprintf(buffer, sizeof(buffer),
+			         "/sys/class/net/%s/phy80211/index", e->d_name);
+			if (nl80211_readint(buffer) != phyidx)
+				continue;
+
 			snprintf(buffer, sizeof(buffer),
 			         "/sys/class/net/%s/ifindex", e->d_name);
 			cifidx = nl80211_readint(buffer);
