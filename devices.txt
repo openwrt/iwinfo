@@ -166,14 +166,10 @@
 0x168c 0x0050 0x0000 0x0000    0      0  "Qualcomm Atheros" "QCA9887"
 0x168c 0x0056 0x0000 0x0000    0      0  "Qualcomm Atheros" "QCA9886"
 0x17cb 0x1104 0x17cb 0x1104    0      0  "Qualcomm Atheros" "QCN6024/9024/9074"
-0x1814 0x3050 0x1814 0x0005    0      0  "Ralink"   "Rt3050"
-0x1814 0x3051 0x1814 0x0007    0      0  "Ralink"   "Rt3051"
-0x1814 0x3052 0x1814 0x0008    0      0  "Ralink"   "Rt3052"
-0x1814 0x3350 0x1814 0x000b    0      0  "Ralink"   "Rt3350"
-0x1814 0x3352 0x1814 0x000c    0      0  "Ralink"   "Rt3352"
-0x1814 0x3662 0x1814 0x000d    0      0  "Ralink"   "Rt3662"
-0x1814 0x3883 0x1814 0x000d    0      0  "Ralink"   "Rt3883"
-0x1814 0x5350 0x1814 0x000f    0      0  "Ralink"   "Rt5350"
+0x1814 0x3051 0x1814 0x0007    0      0  "Ralink"   "Rt3051" /* needs fixing */
+0x1814 0x3052 0x1814 0x0008    0      0  "Ralink"   "Rt3052" /* needs fixing */
+0x1814 0x3350 0x1814 0x000b    0      0  "Ralink"   "Rt3350" /* needs fixing */
+0x1814 0x3662 0x1814 0x000d    0      0  "Ralink"   "Rt3662" /* needs fixing */
 0x11ab 0x2a55 0x11ab 0x0000    0      0  "Marvell"  "88W8864"
 0x02df 0x9135 0x0000 0x0000    0      0  "Marvell"  "88W8887"
 0x11ab 0x2b40 0x11ab 0x0000    0      0  "Marvell"  "88W8964"
@@ -184,7 +180,6 @@
 0x14c3 0x7612 0x14c3 0x7612    0      0  "MediaTek" "MT7612E"
 0x14c3 0x7663 0x14c3 0x7663    0      0  "MediaTek" "MT7613BE"
 0x14c3 0x7615 0x7615 0x14c3    0      0  "MediaTek" "MT7615E"
-0x14c3 0x7620 0x14c3 0x000c    0      0  "MediaTek" "MT7620"
 0x14c3 0x7628 0x14c3 0x0004    0      0  "MediaTek" "MT76x8"
 0x14c3 0x7650 0x14c3 0x7650    0      0  "MediaTek" "MT7610E"
 0x14c3 0x7662 0x14c3 0x7662    0      0  "MediaTek" "MT76x2E"
@@ -250,3 +245,9 @@
 "mediatek,mt7622-wmac"  0      0  "MediaTek" "MT7622"
 "mediatek,mt7628-wmac"  0      0  "MediaTek" "MT7628"
 "mediatek,mt7986-wmac"  0      0  "MediaTek" "MT7986"
+"ralink,rt2880-wmac"    0      0  "Ralink" "Rt2880"
+"ralink,rt3050-wmac"    0      0  "Ralink" "Rt3050"
+"ralink,rt3352-wmac"    0      0  "Ralink" "Rt3352"
+"ralink,rt3883-wmac"    0      0  "Ralink" "Rt3883"
+"ralink,rt5350-wmac"    0      0  "Ralink" "Rt5350"
+"ralink,rt7620-wmac"    0      0  "MediaTek" "MT7620"
