@@ -1249,7 +1249,7 @@ static int nl80211_get_ssid_bssid_cb(struct nl_msg *msg, void *arg)
 	struct nlattr **tb = nl80211_parse(msg);
 	struct nlattr *bss[NL80211_BSS_MAX + 1];
 
-	static struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {
+	static const struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {
 		[NL80211_BSS_INFORMATION_ELEMENTS] = { 0 },
 		[NL80211_BSS_STATUS]               = { .type = NLA_U32 },
 	};
@@ -1373,7 +1373,7 @@ static int nl80211_get_frequency_scan_cb(struct nl_msg *msg, void *arg)
 	struct nlattr **attr = nl80211_parse(msg);
 	struct nlattr *binfo[NL80211_BSS_MAX + 1];
 
-	static struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {
+	static const struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {
 		[NL80211_BSS_FREQUENCY] = { .type = NLA_U32 },
 		[NL80211_BSS_STATUS]    = { .type = NLA_U32 },
 	};
@@ -1550,7 +1550,7 @@ static int nl80211_fill_signal_cb(struct nl_msg *msg, void *arg)
 	struct nlattr *sinfo[NL80211_STA_INFO_MAX + 1];
 	struct nlattr *rinfo[NL80211_RATE_INFO_MAX + 1];
 
-	static struct nla_policy stats_policy[NL80211_STA_INFO_MAX + 1] = {
+	static const struct nla_policy stats_policy[NL80211_STA_INFO_MAX + 1] = {
 		[NL80211_STA_INFO_INACTIVE_TIME] = { .type = NLA_U32    },
 		[NL80211_STA_INFO_RX_BYTES]      = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_BYTES]      = { .type = NLA_U32    },
@@ -1563,7 +1563,7 @@ static int nl80211_fill_signal_cb(struct nl_msg *msg, void *arg)
 		[NL80211_STA_INFO_PLINK_STATE]   = { .type = NLA_U8     },
 	};
 
-	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+	static const struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
 		[NL80211_RATE_INFO_BITRATE]      = { .type = NLA_U16  },
 		[NL80211_RATE_INFO_MCS]          = { .type = NLA_U8   },
 		[NL80211_RATE_INFO_40_MHZ_WIDTH] = { .type = NLA_FLAG },
@@ -1662,7 +1662,7 @@ static int nl80211_get_noise_cb(struct nl_msg *msg, void *arg)
 	struct nlattr **tb = nl80211_parse(msg);
 	struct nlattr *si[NL80211_SURVEY_INFO_MAX + 1];
 
-	static struct nla_policy sp[NL80211_SURVEY_INFO_MAX + 1] = {
+	static const struct nla_policy sp[NL80211_SURVEY_INFO_MAX + 1] = {
 		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
 		[NL80211_SURVEY_INFO_NOISE]     = { .type = NLA_U8  },
 	};
@@ -1760,7 +1760,7 @@ static int nl80211_check_wepkey(const char *key)
 	return 0;
 }
 
-static struct {
+static const struct {
 	const char *match;
 	int version;
 	int suite;
@@ -1817,7 +1817,7 @@ static void parse_wpa_suites(const char *str, int defversion,
 	}
 }
 
-static struct {
+static const struct {
 	const char *match;
 	int cipher;
 } wpa_cipher_strings[] = {
@@ -2099,7 +2099,7 @@ static int nl80211_get_survey_cb(struct nl_msg *msg, void *arg)
 	struct nlattr *sinfo[NL80211_SURVEY_INFO_MAX + 1];
 	int rc;
 
-	static struct nla_policy survey_policy[NL80211_SURVEY_INFO_MAX + 1] = {
+	static const struct nla_policy survey_policy[NL80211_SURVEY_INFO_MAX + 1] = {
 		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
 		[NL80211_SURVEY_INFO_NOISE]  = { .type = NLA_U8     },
 		[NL80211_SURVEY_INFO_TIME] = { .type = NLA_U64   },
@@ -2204,7 +2204,7 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 	struct nlattr *rinfo[NL80211_RATE_INFO_MAX + 1];
 	struct nl80211_sta_flag_update *sta_flags;
 
-	static struct nla_policy stats_policy[NL80211_STA_INFO_MAX + 1] = {
+	static const struct nla_policy stats_policy[NL80211_STA_INFO_MAX + 1] = {
 		[NL80211_STA_INFO_INACTIVE_TIME] = { .type = NLA_U32    },
 		[NL80211_STA_INFO_RX_PACKETS]    = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_PACKETS]    = { .type = NLA_U32    },
@@ -2231,7 +2231,7 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_STA_INFO_NONPEER_PM]    = { .type = NLA_U32	},
 	};
 
-	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+	static const struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
 		[NL80211_RATE_INFO_BITRATE]      = { .type = NLA_U16    },
 		[NL80211_RATE_INFO_MCS]          = { .type = NLA_U8     },
 		[NL80211_RATE_INFO_40_MHZ_WIDTH] = { .type = NLA_FLAG   },
@@ -2413,7 +2413,7 @@ static int nl80211_get_txpwrlist_cb(struct nl_msg *msg, void *arg)
 	struct nlattr *freqs[NL80211_FREQUENCY_ATTR_MAX + 1];
 	struct nlattr *band, *freq;
 
-	static struct nla_policy freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
+	static const struct nla_policy freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
 		[NL80211_FREQUENCY_ATTR_FREQ]         = { .type = NLA_U32  },
 		[NL80211_FREQUENCY_ATTR_DISABLED]     = { .type = NLA_FLAG },
 		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
@@ -2596,7 +2596,7 @@ static int nl80211_get_scanlist_cb(struct nl_msg *msg, void *arg)
 	struct nlattr **tb = nl80211_parse(msg);
 	struct nlattr *bss[NL80211_BSS_MAX + 1];
 
-	static struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {
+	static const struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {
 		[NL80211_BSS_TSF]                  = { .type = NLA_U64 },
 		[NL80211_BSS_FREQUENCY]            = { .type = NLA_U32 },
 		[NL80211_BSS_BSSID]                = { 0 },
@@ -3421,12 +3421,12 @@ static int nl80211_get_ifcomb_cb(struct nl_msg *msg, void *arg)
 
 	nla_for_each_nested(comb, attr[NL80211_ATTR_INTERFACE_COMBINATIONS], comb_rem)
 	{
-		static struct nla_policy iface_combination_policy[NUM_NL80211_IFACE_COMB] = {
+		static const struct nla_policy iface_combination_policy[NUM_NL80211_IFACE_COMB] = {
 			[NL80211_IFACE_COMB_LIMITS] = { .type = NLA_NESTED },
 			[NL80211_IFACE_COMB_MAXNUM] = { .type = NLA_U32 },
 		};
 		struct nlattr *tb_comb[NUM_NL80211_IFACE_COMB+1];
-		static struct nla_policy iface_limit_policy[NUM_NL80211_IFACE_LIMIT] = {
+		static const struct nla_policy iface_limit_policy[NUM_NL80211_IFACE_LIMIT] = {
 			[NL80211_IFACE_LIMIT_TYPES] = { .type = NLA_NESTED },
 			[NL80211_IFACE_LIMIT_MAX] = { .type = NLA_U32 },
 		};
