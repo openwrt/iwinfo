@@ -240,8 +240,8 @@ struct iwinfo_assoclist_entry {
 	uint64_t rx_drop_misc;
 	struct iwinfo_rate_entry rx_rate;
 	struct iwinfo_rate_entry tx_rate;
-	uint32_t rx_bytes;
-	uint32_t tx_bytes;
+	uint64_t rx_bytes;
+	uint64_t tx_bytes;
 	uint32_t tx_retries;
 	uint32_t tx_failed;
 	uint64_t t_offset;

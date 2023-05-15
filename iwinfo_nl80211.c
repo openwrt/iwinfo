@@ -1554,6 +1554,8 @@ static int nl80211_fill_signal_cb(struct nl_msg *msg, void *arg)
 		[NL80211_STA_INFO_INACTIVE_TIME] = { .type = NLA_U32    },
 		[NL80211_STA_INFO_RX_BYTES]      = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_BYTES]      = { .type = NLA_U32    },
+		[NL80211_STA_INFO_RX_BYTES64]    = { .type = NLA_U64    },
+		[NL80211_STA_INFO_TX_BYTES64]    = { .type = NLA_U64    },
 		[NL80211_STA_INFO_RX_PACKETS]    = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_PACKETS]    = { .type = NLA_U32    },
 		[NL80211_STA_INFO_SIGNAL]        = { .type = NLA_U8     },
@@ -2214,6 +2216,8 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_STA_INFO_SIGNAL_AVG]    = { .type = NLA_U8     },
 		[NL80211_STA_INFO_RX_BYTES]      = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_BYTES]      = { .type = NLA_U32    },
+		[NL80211_STA_INFO_RX_BYTES64]    = { .type = NLA_U64    },
+		[NL80211_STA_INFO_TX_BYTES64]    = { .type = NLA_U64    },
 		[NL80211_STA_INFO_TX_RETRIES]    = { .type = NLA_U32    },
 		[NL80211_STA_INFO_TX_FAILED]     = { .type = NLA_U32    },
 		[NL80211_STA_INFO_CONNECTED_TIME]= { .type = NLA_U32    },
@@ -2277,10 +2281,14 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		                      sinfo[NL80211_STA_INFO_TX_BITRATE], rate_policy))
 			nl80211_parse_rateinfo(rinfo, &e->tx_rate);
 
-		if (sinfo[NL80211_STA_INFO_RX_BYTES])
+		if (sinfo[NL80211_STA_INFO_RX_BYTES64])
+			e->rx_bytes = nla_get_u64(sinfo[NL80211_STA_INFO_RX_BYTES64]);
+		else if (sinfo[NL80211_STA_INFO_RX_BYTES])
 			e->rx_bytes = nla_get_u32(sinfo[NL80211_STA_INFO_RX_BYTES]);
 
-		if (sinfo[NL80211_STA_INFO_TX_BYTES])
+		if (sinfo[NL80211_STA_INFO_TX_BYTES64])
+			e->tx_bytes = nla_get_u64(sinfo[NL80211_STA_INFO_TX_BYTES64]);
+		else if (sinfo[NL80211_STA_INFO_TX_BYTES])
 			e->tx_bytes = nla_get_u32(sinfo[NL80211_STA_INFO_TX_BYTES]);
 
 		if (sinfo[NL80211_STA_INFO_TX_RETRIES])
