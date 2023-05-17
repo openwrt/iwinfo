@@ -244,6 +244,7 @@
 "qcom,ipq8074-wifi"     0      0  "Qualcomm Atheros" "IPQ8074"
 "mediatek,mt7622-wmac"  0      0  "MediaTek" "MT7622"
 "mediatek,mt7628-wmac"  0      0  "MediaTek" "MT7628"
+"mediatek,mt7981-wmac"  0      0  "MediaTek" "MT7981"
 "mediatek,mt7986-wmac"  0      0  "MediaTek" "MT7986"
 "ralink,rt2880-wmac"    0      0  "Ralink" "Rt2880"
 "ralink,rt3050-wmac"    0      0  "Ralink" "Rt3050"
