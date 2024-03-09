@@ -31,6 +31,7 @@ enum iwinfo_80211 {
 	IWINFO_80211_AC,
 	IWINFO_80211_AD,
 	IWINFO_80211_AX,
+	IWINFO_80211_BE,
 
 	/* keep last */
 	IWINFO_80211_COUNT
@@ -43,6 +44,7 @@ enum iwinfo_80211 {
 #define IWINFO_80211_AC      (1 << IWINFO_80211_AC)
 #define IWINFO_80211_AD      (1 << IWINFO_80211_AD)
 #define IWINFO_80211_AX      (1 << IWINFO_80211_AX)
+#define IWINFO_80211_BE      (1 << IWINFO_80211_BE)
 
 extern const char * const IWINFO_80211_NAMES[IWINFO_80211_COUNT];
 
@@ -192,6 +194,12 @@ enum iwinfo_htmode {
 	IWINFO_HTMODE_HE80,
 	IWINFO_HTMODE_HE80_80,
 	IWINFO_HTMODE_HE160,
+	IWINFO_HTMODE_EHT20,
+	IWINFO_HTMODE_EHT40,
+	IWINFO_HTMODE_EHT80,
+	IWINFO_HTMODE_EHT80_80,
+	IWINFO_HTMODE_EHT160,
+	IWINFO_HTMODE_EHT320,
 
 	/* keep last */
 	IWINFO_HTMODE_COUNT
@@ -210,6 +218,12 @@ enum iwinfo_htmode {
 #define IWINFO_HTMODE_HE80       (1 << IWINFO_HTMODE_HE80)
 #define IWINFO_HTMODE_HE80_80    (1 << IWINFO_HTMODE_HE80_80)
 #define IWINFO_HTMODE_HE160      (1 << IWINFO_HTMODE_HE160)
+#define IWINFO_HTMODE_EHT20      (1 << IWINFO_HTMODE_EHT20)
+#define IWINFO_HTMODE_EHT40      (1 << IWINFO_HTMODE_EHT40)
+#define IWINFO_HTMODE_EHT80      (1 << IWINFO_HTMODE_EHT80)
+#define IWINFO_HTMODE_EHT80_80   (1 << IWINFO_HTMODE_EHT80_80)
+#define IWINFO_HTMODE_EHT160     (1 << IWINFO_HTMODE_EHT160)
+#define IWINFO_HTMODE_EHT320     (1 << IWINFO_HTMODE_EHT320)
 
 extern const char * const IWINFO_HTMODE_NAMES[IWINFO_HTMODE_COUNT];
 
@@ -222,10 +236,13 @@ struct iwinfo_rate_entry {
 	uint8_t is_ht:1;
 	uint8_t is_vht:1;
 	uint8_t is_he:1;
+	uint8_t is_eht:1;
 	uint8_t he_gi;
 	uint8_t he_dcm;
 	uint8_t mhz;
 	uint8_t nss;
+	uint8_t mhz_hi;
+	uint8_t eht_gi;
 };
 
 struct iwinfo_assoclist_entry {

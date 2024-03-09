@@ -2047,7 +2047,17 @@ static void nl80211_parse_rateinfo(struct nlattr **ri,
 	else if (ri[NL80211_RATE_INFO_BITRATE])
 		re->rate = nla_get_u16(ri[NL80211_RATE_INFO_BITRATE]) * 100;
 
-	if (ri[NL80211_RATE_INFO_HE_MCS])
+	if (ri[NL80211_RATE_INFO_EHT_MCS])
+	{
+		re->is_eht = 1;
+		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_EHT_MCS]);
+
+		if (ri[NL80211_RATE_INFO_EHT_NSS])
+			re->nss = nla_get_u8(ri[NL80211_RATE_INFO_EHT_NSS]);
+		if (ri[NL80211_RATE_INFO_EHT_GI])
+			re->eht_gi = nla_get_u8(ri[NL80211_RATE_INFO_EHT_GI]);
+	}
+	else if (ri[NL80211_RATE_INFO_HE_MCS])
 	{
 		re->is_he = 1;
 		re->mcs = nla_get_u8(ri[NL80211_RATE_INFO_HE_MCS]);
@@ -2084,6 +2094,8 @@ static void nl80211_parse_rateinfo(struct nlattr **ri,
 	else if (ri[NL80211_RATE_INFO_80P80_MHZ_WIDTH] ||
 	         ri[NL80211_RATE_INFO_160_MHZ_WIDTH])
 		re->mhz = 160;
+	else if (ri[NL80211_RATE_INFO_320_MHZ_WIDTH])
+		re->mhz_hi = 320 / 256, re->mhz = 320 % 256;
 	else
 		re->mhz = 20;
 
@@ -3155,6 +3167,7 @@ struct nl80211_modes
 	uint16_t nl_ht;
 	uint32_t nl_vht;
 	uint16_t he_phy_cap[6];
+	uint16_t eht_phy_cap[9];
 };
 
 static void nl80211_eval_modelist(struct nl80211_modes *m)
@@ -3181,6 +3194,22 @@ static void nl80211_eval_modelist(struct nl80211_modes *m)
 			m->ht |= IWINFO_HTMODE_HE160;
 		if (m->he_phy_cap[0] & BIT(12))
 			m->ht |= IWINFO_HTMODE_HE160 | IWINFO_HTMODE_HE80_80;
+	}
+
+	if (m->eht_phy_cap[0] != 0) {
+		m->hw |= IWINFO_80211_BE;
+		m->ht |= IWINFO_HTMODE_EHT20;
+
+		if (m->he_phy_cap[0] & BIT(9))
+			m->ht |= IWINFO_HTMODE_EHT40;
+		if (m->he_phy_cap[0] & BIT(10))
+			m->ht |= IWINFO_HTMODE_EHT40 | IWINFO_HTMODE_EHT80;
+		if (m->he_phy_cap[0] & BIT(11))
+			m->ht |= IWINFO_HTMODE_EHT160;
+		if (m->he_phy_cap[0] & BIT(12))
+			m->ht |= IWINFO_HTMODE_EHT160 | IWINFO_HTMODE_EHT80_80;
+		if ((m->eht_phy_cap[0] & BIT(9)) && (m->bands & IWINFO_BAND_6))
+			m->ht |= IWINFO_HTMODE_EHT320;
 	}
 
 	if (m->bands & IWINFO_BAND_24)
@@ -3252,6 +3281,8 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 				nla_for_each_nested(nl_iftype, bands[NL80211_BAND_ATTR_IFTYPE_DATA], rem_band) {
 					nla_parse(tb, NL80211_BAND_IFTYPE_ATTR_MAX,
 						  nla_data(nl_iftype), nla_len(nl_iftype), NULL);
+
+					// HE
 					if (tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]) {
 						len = nla_len(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]);
 
@@ -3259,6 +3290,17 @@ static int nl80211_get_modelist_cb(struct nl_msg *msg, void *arg)
 							len = sizeof(m->he_phy_cap) - 1;
 						memcpy(&((__u8 *)m->he_phy_cap)[1],
 							nla_data(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]),
+							len);
+					}
+
+					// EHT
+					if (tb[NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY]) {
+						len = nla_len(tb[NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY]);
+
+						if (len > sizeof(m->eht_phy_cap) - 1)
+							len = sizeof(m->eht_phy_cap) - 1;
+						memcpy(&((uint8_t *)m->eht_phy_cap)[1],
+							nla_data(tb[NL80211_BAND_IFTYPE_ATTR_EHT_CAP_PHY]),
 							len);
 					}
 				}
@@ -3325,6 +3367,7 @@ static int nl80211_get_htmode(const char *ifname, int *buf)
 	char *res, b[2] = { 0 };
 	int err;
 	bool he = false;
+	bool eht = false;
 
 	res = nl80211_phy2ifname(ifname);
 	*buf = 0;
@@ -3335,6 +3378,9 @@ static int nl80211_get_htmode(const char *ifname, int *buf)
 	if (err)
 		return -1;
 
+	if (nl80211_hostapd_query(res ? res : ifname, "ieee80211be", b, sizeof(b)))
+		eht = b[0] == '1';
+
 	if (nl80211_hostapd_query(res ? res : ifname, "ieee80211ax", b, sizeof(b)))
 		he = b[0] == '1';
 	else if (nl80211_wpactl_query(res ? res : ifname, "wifi_generation", b, sizeof(b)))
@@ -3343,7 +3389,7 @@ static int nl80211_get_htmode(const char *ifname, int *buf)
 	switch (chn.width) {
 	case NL80211_CHAN_WIDTH_20:
 		if (he)
-			*buf = IWINFO_HTMODE_HE20;
+			*buf = (eht == true) ? IWINFO_HTMODE_EHT20 : IWINFO_HTMODE_HE20;
 		else if (chn.mode == -1)
 			*buf = IWINFO_HTMODE_VHT20;
 		else
@@ -3351,7 +3397,7 @@ static int nl80211_get_htmode(const char *ifname, int *buf)
 		break;
 	case NL80211_CHAN_WIDTH_40:
 		if (he)
-			*buf = IWINFO_HTMODE_HE40;
+			*buf = (eht == true) ? IWINFO_HTMODE_EHT40 : IWINFO_HTMODE_HE40;
 		else if (chn.mode == -1)
 			*buf = IWINFO_HTMODE_VHT40;
 		else
@@ -3359,21 +3405,24 @@ static int nl80211_get_htmode(const char *ifname, int *buf)
 		break;
 	case NL80211_CHAN_WIDTH_80:
 		if (he)
-			*buf = IWINFO_HTMODE_HE80;
+			*buf = (eht == true) ? IWINFO_HTMODE_EHT80 : IWINFO_HTMODE_HE80;
 		else
 			*buf = IWINFO_HTMODE_VHT80;
 		break;
 	case NL80211_CHAN_WIDTH_80P80:
 		if (he)
-			*buf = IWINFO_HTMODE_HE80_80;
+			*buf = (eht == true) ? IWINFO_HTMODE_EHT80_80 : IWINFO_HTMODE_HE80_80;
 		else
 			*buf = IWINFO_HTMODE_VHT80_80;
 		break;
 	case NL80211_CHAN_WIDTH_160:
 		if (he)
-			*buf = IWINFO_HTMODE_HE160;
+			*buf = (eht == true) ? IWINFO_HTMODE_EHT160 : IWINFO_HTMODE_HE160;
 		else
 			*buf = IWINFO_HTMODE_VHT160;
+		break;
+	case NL80211_CHAN_WIDTH_320:
+		*buf = IWINFO_HTMODE_EHT320;
 		break;
 	case NL80211_CHAN_WIDTH_5:
 	case NL80211_CHAN_WIDTH_10:
