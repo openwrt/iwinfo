@@ -195,6 +195,8 @@
 
 # USB devices
 # 0x0000 | 0x0000 | vendor id | product id | ...
+# mt7601u/usb.c
+0x0000 0x0000 0x148f 0x7601    0      0  "MediaTek" "MT7601U"
 # mt7921/usb.c
 0x0000 0x0000 0x0e8d 0x7961    0      0  "MediaTek" "MT7921AU"
 # mt76x2/usb.c
