@@ -153,6 +153,35 @@ static int nl80211_readstr(const char *path, char *buffer, int length)
 	return rv;
 }
 
+static bool nl80211_is_numeric(const char *str)
+{
+	return *str && !str[strspn(str, "0123456789")];
+}
+
+static bool nl80211_should_get_station(const char *req_name,
+                                       const char *cur_name)
+{
+	size_t req_name_len = strlen(req_name);
+
+	if (strncmp(cur_name, req_name, req_name_len))
+		return false;
+
+	if (!cur_name[req_name_len])
+		return true;
+
+	if (cur_name[req_name_len] == '.')
+	{
+		if (!strncmp(&cur_name[req_name_len + 1], "sta", 3) &&
+		    nl80211_is_numeric(&cur_name[req_name_len + sizeof(".sta") - 1]))
+			return true;
+
+		if (nl80211_is_numeric(&cur_name[req_name_len + sizeof(".") - 1]))
+			return true;
+	}
+
+	return false;
+}
+
 static int nl80211_get_band(int nla_type)
 {
 	switch (nla_type)
@@ -1615,9 +1644,7 @@ static void nl80211_fill_signal(const char *ifname, struct nl80211_rssi_rate *r)
 	{
 		while ((de = readdir(d)) != NULL)
 		{
-			if (!strncmp(de->d_name, ifname, strlen(ifname)) &&
-			    (!de->d_name[strlen(ifname)] ||
-			     !strncmp(&de->d_name[strlen(ifname)], ".sta", 4)))
+			if (nl80211_should_get_station(ifname, de->d_name))
 			{
 				nl80211_request(de->d_name, NL80211_CMD_GET_STATION,
 				                NLM_F_DUMP, nl80211_fill_signal_cb, r);
@@ -2389,9 +2416,7 @@ static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
 	{
 		while ((de = readdir(d)) != NULL)
 		{
-			if (!strncmp(de->d_name, ifname, strlen(ifname)) &&
-			    (!de->d_name[strlen(ifname)] ||
-			     !strncmp(&de->d_name[strlen(ifname)], ".sta", 4)))
+			if (nl80211_should_get_station(ifname, de->d_name))
 			{
 				nl80211_request(de->d_name, NL80211_CMD_GET_STATION,
 				                NLM_F_DUMP, nl80211_get_assoclist_cb, &arr);
