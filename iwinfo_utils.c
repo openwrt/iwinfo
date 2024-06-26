@@ -151,8 +151,8 @@ uint8_t iwinfo_ghz2band(uint32_t ghz)
 
 size_t iwinfo_format_hwmodes(int modes, char *buf, size_t len)
 {
-	// bit numbers as per IWINFO_80211_*:  ad ac ax  a  b  g  n
-	const int order[IWINFO_80211_COUNT] = { 5, 4, 6, 0, 1, 2, 3 };
+	// bit numbers as per IWINFO_80211_*:  ad ac ax  a  b  be g  n
+	const int order[IWINFO_80211_COUNT] = { 5, 4, 6, 0, 1, 7, 2, 3 };
 	size_t res = 0;
 	int i;
 
@@ -210,6 +210,22 @@ int iwinfo_htmode_is_he(int htmode)
 	case IWINFO_HTMODE_HE80:
 	case IWINFO_HTMODE_HE80_80:
 	case IWINFO_HTMODE_HE160:
+		return 1;
+	}
+
+	return 0;
+}
+
+int iwinfo_htmode_is_eht(int htmode)
+{
+	switch (htmode)
+	{
+	case IWINFO_HTMODE_EHT20:
+	case IWINFO_HTMODE_EHT40:
+	case IWINFO_HTMODE_EHT80:
+	case IWINFO_HTMODE_EHT80_80:
+	case IWINFO_HTMODE_EHT160:
+	case IWINFO_HTMODE_EHT320:
 		return 1;
 	}
 
