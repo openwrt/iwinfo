@@ -279,7 +279,10 @@ static void set_rateinfo(lua_State *L, struct iwinfo_rate_entry *r, bool rx)
 	lua_pushboolean(L, r->is_he);
 	lua_setfield(L, -2, rx ? "rx_he" : "tx_he");
 
-	lua_pushnumber(L, r->mhz);
+	lua_pushboolean(L, r->is_eht);
+	lua_setfield(L, -2, rx ? "rx_eht" : "tx_eht");
+
+	lua_pushnumber(L, r->mhz_hi * 256 + r->mhz);
 	lua_setfield(L, -2, rx ? "rx_mhz" : "tx_mhz");
 
 	if (r->is_ht)
@@ -293,7 +296,7 @@ static void set_rateinfo(lua_State *L, struct iwinfo_rate_entry *r, bool rx)
 		lua_pushboolean(L, r->is_short_gi);
 		lua_setfield(L, -2, rx ? "rx_short_gi" : "tx_short_gi");
 	}
-	else if (r->is_vht || r->is_he)
+	else if (r->is_vht || r->is_he | r->is_eht)
 	{
 		lua_pushnumber(L, r->mcs);
 		lua_setfield(L, -2, rx ? "rx_mcs" : "tx_mcs");
@@ -307,6 +310,11 @@ static void set_rateinfo(lua_State *L, struct iwinfo_rate_entry *r, bool rx)
 
 			lua_pushnumber(L, r->he_dcm);
 			lua_setfield(L, -2, rx ? "rx_he_dcm" : "tx_he_dcm");
+		}
+
+		if (r->is_eht) {
+			lua_pushnumber(L, r->eht_gi);
+			lua_setfield(L, -2, rx ? "rx_eht_gi" : "tx_eht_gi");
 		}
 
 		if (r->is_vht) {
@@ -553,6 +561,9 @@ static int iwinfo_L_hwmodelist(lua_State *L, int (*func)(const char *, int *))
 
 		lua_pushboolean(L, hwmodes & IWINFO_80211_AX);
 		lua_setfield(L, -2, "ax");
+
+		lua_pushboolean(L, hwmodes & IWINFO_80211_BE);
+		lua_setfield(L, -2, "be");
 
 		return 1;
 	}

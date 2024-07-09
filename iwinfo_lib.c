@@ -30,6 +30,7 @@ const char * const IWINFO_80211_NAMES[IWINFO_80211_COUNT] = {
 	"ac",
 	"ad",
 	"ax",
+	"be",
 };
 
 const char * const IWINFO_BAND_NAMES[IWINFO_BAND_COUNT] = {
@@ -92,7 +93,13 @@ const char * const IWINFO_HTMODE_NAMES[IWINFO_HTMODE_COUNT] = {
 	"HE40",
 	"HE80",
 	"HE80+80",
-	"HE160"
+	"HE160",
+	"EHT20",
+	"EHT40",
+	"EHT80",
+	"EHT80+80",
+	"EHT160",
+	"EHT320",
 };
 
 const char * const IWINFO_FREQ_FLAG_NAMES[IWINFO_FREQ_FLAG_COUNT] = {
