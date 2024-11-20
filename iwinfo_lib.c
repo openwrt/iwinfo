@@ -112,6 +112,7 @@ const char * const IWINFO_FREQ_FLAG_NAMES[IWINFO_FREQ_FLAG_COUNT] = {
 	"NO_HE",
 	"NO_IR",
 	"INDOOR_ONLY",
+	"RADAR DETECTION",
 };
 
 const char * const ht_secondary_offset[4] = {

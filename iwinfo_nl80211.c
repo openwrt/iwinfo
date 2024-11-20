@@ -3075,6 +3075,8 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 						e->flags |= IWINFO_FREQ_NO_IR;
 					if (freqs[NL80211_FREQUENCY_ATTR_INDOOR_ONLY])
 						e->flags |= IWINFO_FREQ_INDOOR_ONLY;
+					if (freqs[NL80211_FREQUENCY_ATTR_RADAR])
+						e->flags |= IWINFO_FREQUENCY_ATTR_RADAR;
 
 					/* keep backwards compatibility */
 					e->restricted = (e->flags & IWINFO_FREQ_NO_IR) ? 1 : 0;
