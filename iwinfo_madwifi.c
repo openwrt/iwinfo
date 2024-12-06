@@ -773,7 +773,7 @@ static int madwifi_get_assoclist(const char *ifname, char *buf, int *len)
 			si = (struct ieee80211req_sta_info *) cp;
 
 			/* stop parsing more elements as we reached max buf */
-			if (bl + sizeof(entry) > IWINFO_BUFSIZE)
+			if (bl + sizeof(entry) > *len)
 				break;
 
 			memset(&entry, 0, sizeof(entry));

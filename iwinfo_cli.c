@@ -784,10 +784,11 @@ static void print_freqlist(const struct iwinfo_ops *iw, const char *ifname)
 
 static void print_assoclist(const struct iwinfo_ops *iw, const char *ifname)
 {
-	int i, len;
+	int i, len = IWINFO_BUFSIZE;
 	char buf[IWINFO_BUFSIZE];
 	struct iwinfo_assoclist_entry *e;
 
+	/* Pass to assoclist the size of buf allocated with len */
 	if (iw->assoclist(ifname, buf, &len))
 	{
 		printf("No information available\n");

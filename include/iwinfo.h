@@ -409,6 +409,10 @@ struct iwinfo_ops {
 	int (*hardware_name)(const char *, char *);
 	int (*encryption)(const char *, char *);
 	int (*phyname)(const char *, char *);
+	/*
+	 * Third element is always set to the size of the buffer.
+	 * assoclist should stop parsing elements if this is reached.
+	 */
 	int (*assoclist)(const char *, char *, int *);
 	int (*txpwrlist)(const char *, char *, int *);
 	int (*scanlist)(const char *, char *, int *);

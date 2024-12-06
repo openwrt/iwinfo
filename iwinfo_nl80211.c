@@ -2401,8 +2401,12 @@ static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
 	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
 	struct iwinfo_assoclist_entry *e;
 
+	/* If len is not set, use IWINFO_BUFSIZE by default */
+	if (!*len)
+		*len = IWINFO_BUFSIZE;
+
 	/* Limit element to the preallocated space */
-	arr.max = IWINFO_BUFSIZE / sizeof(*e);
+	arr.max = *len / sizeof(*e);
 
 	if ((d = opendir("/sys/class/net")) != NULL)
 	{
