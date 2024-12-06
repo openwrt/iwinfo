@@ -2254,6 +2254,10 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_RATE_INFO_SHORT_GI]     = { .type = NLA_FLAG   },
 	};
 
+	/* With NULL buf, we just count the stations */
+	if (!arr->buf)
+		goto exit;
+
 	/* stop parsing more elements as we reached max buf */
 	if (arr->count >= arr->max)
 		return NL_STOP;
@@ -2373,6 +2377,8 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 	}
 
 	e->noise = 0; /* filled in by caller */
+
+exit:
 	arr->count++;
 
 	return NL_SKIP;
@@ -2423,7 +2429,8 @@ static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
 
 		closedir(d);
 
-		if (!nl80211_get_noise(ifname, &noise))
+		/* Skip setting noise if we are just counting station */
+		if (arr.buf && !nl80211_get_noise(ifname, &noise))
 			for (i = 0, e = arr.buf; i < arr.count; i++, e++)
 				e->noise = noise;
 

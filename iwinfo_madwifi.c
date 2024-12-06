@@ -772,6 +772,10 @@ static int madwifi_get_assoclist(const char *ifname, char *buf, int *len)
 		do {
 			si = (struct ieee80211req_sta_info *) cp;
 
+			/* If buf is NULL, we only count the station */
+			if (!buf)
+				goto next;
+
 			/* stop parsing more elements as we reached max buf */
 			if (bl + sizeof(entry) > *len)
 				break;
@@ -801,6 +805,7 @@ static int madwifi_get_assoclist(const char *ifname, char *buf, int *len)
 
 			memcpy(&buf[bl], &entry, sizeof(struct iwinfo_assoclist_entry));
 
+next:
 			bl += sizeof(struct iwinfo_assoclist_entry);
 			cp += si->isi_len;
 			tl -= si->isi_len;

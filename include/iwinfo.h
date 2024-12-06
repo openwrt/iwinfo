@@ -410,6 +410,9 @@ struct iwinfo_ops {
 	int (*encryption)(const char *, char *);
 	int (*phyname)(const char *, char *);
 	/*
+	 * assoclist might receive a NULL buf as second element.
+	 * In such case assoclist should only return the length
+	 * of the expected buffer.
 	 * Third element is always set to the size of the buffer.
 	 * assoclist should stop parsing elements if this is reached.
 	 */
