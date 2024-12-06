@@ -2254,6 +2254,10 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_RATE_INFO_SHORT_GI]     = { .type = NLA_FLAG   },
 	};
 
+	/* stop parsing more elements as we reached max buf */
+	if (arr->count >= arr->max)
+		return NL_STOP;
+
 	/* advance to end of array */
 	e += arr->count;
 	memset(e, 0, sizeof(*e));
@@ -2396,6 +2400,9 @@ static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
 	struct dirent *de;
 	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
 	struct iwinfo_assoclist_entry *e;
+
+	/* Limit element to the preallocated space */
+	arr.max = IWINFO_BUFSIZE / sizeof(*e);
 
 	if ((d = opendir("/sys/class/net")) != NULL)
 	{
