@@ -784,13 +784,12 @@ static void print_freqlist(const struct iwinfo_ops *iw, const char *ifname)
 
 static void print_assoclist(const struct iwinfo_ops *iw, const char *ifname)
 {
-	int i, len = IWINFO_BUFSIZE;
-	char buf[IWINFO_BUFSIZE];
+	int i, len = 0;
+	char *buf = NULL;
 	struct iwinfo_assoclist_entry *e;
 
-	/* Pass to assoclist the size of buf allocated with len */
-	if (iw->assoclist(ifname, buf, &len))
-	{
+	/* Call assoclist with NULL buf to get number of element to alloc */
+	if (iw->assoclist(ifname, NULL, &len)) {
 		printf("No information available\n");
 		return;
 	}
@@ -798,6 +797,24 @@ static void print_assoclist(const struct iwinfo_ops *iw, const char *ifname)
 	{
 		printf("No station connected\n");
 		return;
+	}
+
+	buf = malloc(len * sizeof(*e));
+	if (!buf) {
+		printf("No space to allocate assoc elements buf\n");
+		return;
+	}
+
+	/* Pass to assoclist the size of buf allocated with len */
+	if (iw->assoclist(ifname, buf, &len))
+	{
+		printf("No information available\n");
+		goto exit;
+	}
+	else if (len <= 0)
+	{
+		printf("No station connected\n");
+		goto exit;
 	}
 
 	for (i = 0; i < len; i += sizeof(struct iwinfo_assoclist_entry))
@@ -824,6 +841,9 @@ static void print_assoclist(const struct iwinfo_ops *iw, const char *ifname)
 		printf("	expected throughput: %s\n\n",
 			format_rate(e->thr));
 	}
+
+exit:
+	free(buf);
 }
 
 
