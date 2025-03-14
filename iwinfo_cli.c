@@ -362,6 +362,19 @@ static const char* format_chan_width(bool vht, uint8_t width)
 	return "unknown";
 }
 
+static const char* format_6ghz_chan_width(uint8_t width)
+{
+	if (width < ARRAY_SIZE(eht_chan_width))
+		switch (eht_chan_width[width]) {
+			case 20: return "20 MHz";
+			case 40: return "40 MHz";
+			case 80: return "80 MHz";
+			case 160: return "160 MHz";
+			case 320: return "320 MHz";
+		}
+
+	return "unknown";
+}
 
 static const char * print_type(const struct iwinfo_ops *iw, const char *ifname)
 {
@@ -718,6 +731,26 @@ static void print_scanlist(const struct iwinfo_ops *iw, const char *ifname)
 				 e->vht_chan_info.center_chan_2);
 			printf("                    Channel Width: %s\n",
 				format_chan_width(true, e->vht_chan_info.chan_width));
+		}
+
+		if (e->he_chan_info.center_chan_1) {
+			printf("          HE Operation:\n");
+			printf("                    Center Frequency 1: %d\n",
+				 e->he_chan_info.center_chan_1);
+			printf("                    Center Frequency 2: %d\n",
+				 e->he_chan_info.center_chan_2);
+			printf("                    Channel Width: %s\n",
+				format_6ghz_chan_width(e->he_chan_info.chan_width));
+		}
+
+		if (e->eht_chan_info.center_chan_1) {
+			printf("          EHT Operation:\n");
+			printf("                    Center Frequency 1: %d\n",
+				 e->eht_chan_info.center_chan_1);
+			printf("                    Center Frequency 2: %d\n",
+				 e->eht_chan_info.center_chan_2);
+			printf("                    Channel Width: %s\n",
+				format_6ghz_chan_width(e->eht_chan_info.chan_width));
 		}
 
 		printf("\n");

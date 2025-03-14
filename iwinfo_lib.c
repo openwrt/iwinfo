@@ -133,6 +133,14 @@ const uint16_t vht_chan_width[4] = {
 	8080, /* 80+80 MHz */
 };
 
+const uint16_t eht_chan_width[5] = {
+	20, /* 20 MHz */
+	40, /* 40 MHz */
+	80, /* 80 MHz */
+	160, /* 80+80 or 160 MHz */
+	320, /* 160+160 or 320 MHz */
+};
+
 /*
  * ISO3166 country labels
  */

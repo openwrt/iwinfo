@@ -2567,6 +2567,66 @@ struct nl80211_scanlist {
 };
 
 
+static void nl80211_get_scanlist_he_operation(unsigned char len,
+		unsigned char *ie, struct iwinfo_scanlist_entry *e)
+{
+	uint8_t offset = 6;
+
+	/* 6 GHz Operation Info not present */
+	if (!(ie[2] & 0x02))
+		return;
+
+	/* VHT Operation Info present */
+	if (ie[1] & 0x40)
+		offset += 3;
+
+	/* Co Hosted BSS present */
+	if (ie[1] & 0x80)
+		offset += 1;
+
+	if (len - offset < 5)
+		return;
+
+	e->he_chan_info.chan_width = ie[offset + 1] & 0x03;
+	e->he_chan_info.center_chan_1 = ie[offset + 2];
+	e->he_chan_info.center_chan_2 = ie[offset + 3];
+}
+
+
+static void nl80211_get_scanlist_eht_operation(unsigned char len,
+		unsigned char *ie, struct iwinfo_scanlist_entry *e)
+{
+	/* EHT Operation Info not present */
+	if (!(ie[0] & 0x01))
+		return;
+
+	if (len < 8)
+		return;
+
+	e->eht_chan_info.chan_width = ie[5] & 0x07;
+	e->eht_chan_info.center_chan_1 = ie[6];
+	e->eht_chan_info.center_chan_2 = ie[7];
+}
+
+
+static void nl80211_get_scanlist_extension(unsigned char len,
+		unsigned char *ie, struct iwinfo_scanlist_entry *e)
+{
+	if (len < 1)
+		return;
+
+	switch (ie[0])
+	{
+	case 36: /* HE Operation */
+		nl80211_get_scanlist_he_operation(len - 1, ie + 1, e);
+		break;
+	case 106: /* EHT Operation */
+		nl80211_get_scanlist_eht_operation(len - 1, ie + 1, e);
+		break;
+	}
+}
+
+
 static void nl80211_get_scanlist_ie(struct nlattr **bss,
                                     struct iwinfo_scanlist_entry *e)
 {
@@ -2611,6 +2671,9 @@ static void nl80211_get_scanlist_ie(struct nlattr **bss,
 				e->vht_chan_info.center_chan_1 = ie[3];
 				e->vht_chan_info.center_chan_2 = ie[4];
 			}
+			break;
+		case 255: /* Extension Tag*/
+			nl80211_get_scanlist_extension(ie[1], ie + 2, e);
 			break;
 		}
 

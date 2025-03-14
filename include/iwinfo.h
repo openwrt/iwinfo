@@ -330,6 +330,12 @@ extern const uint16_t ht_chan_width[2];
    2 = 160 MHz
    3 = 80+80 MHz */
 extern const uint16_t vht_chan_width[4];
+/* 0 = 20 MHz
+   1 = 40 MHz
+   2 = 80 MHz
+   3 = 80+80 or 160 MHz
+   4 = 160+160 or 320 MHz */
+extern const uint16_t eht_chan_width[5];
 
 struct iwinfo_scanlist_entry {
 	uint8_t mac[6];
@@ -344,6 +350,8 @@ struct iwinfo_scanlist_entry {
 	struct iwinfo_crypto_entry crypto;
 	struct iwinfo_scanlist_ht_chan_entry ht_chan_info;
 	struct iwinfo_scanlist_vht_chan_entry vht_chan_info;
+	struct iwinfo_scanlist_vht_chan_entry he_chan_info;
+	struct iwinfo_scanlist_vht_chan_entry eht_chan_info;
 };
 
 struct iwinfo_country_entry {
