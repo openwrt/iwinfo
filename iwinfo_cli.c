@@ -700,13 +700,15 @@ static void print_scanlist(const struct iwinfo_ops *iw, const char *ifname)
 			format_quality_max(e->quality_max));
 		printf("          Encryption: %s\n",
 			format_encryption(&e->crypto));
-		printf("          HT Operation:\n");
-		printf("                    Primary Channel: %d\n",
-			e->ht_chan_info.primary_chan);
-		printf("                    Secondary Channel Offset: %s\n",
-			ht_secondary_offset[e->ht_chan_info.secondary_chan_off]);
-		printf("                    Channel Width: %s\n",
-			format_chan_width(false, e->ht_chan_info.chan_width));
+		if (e->ht_chan_info.primary_chan) {
+			printf("          HT Operation:\n");
+			printf("                    Primary Channel: %d\n",
+				e->ht_chan_info.primary_chan);
+			printf("                    Secondary Channel Offset: %s\n",
+				ht_secondary_offset[e->ht_chan_info.secondary_chan_off]);
+			printf("                    Channel Width: %s\n",
+				format_chan_width(false, e->ht_chan_info.chan_width));
+		}
 
 		if (e->vht_chan_info.center_chan_1) {
 			printf("          VHT Operation:\n");
