@@ -1660,7 +1660,11 @@ static int nl80211_get_signal(const char *ifname, int *buf)
 
 static int nl80211_get_noise_cb(struct nl_msg *msg, void *arg)
 {
-	int8_t *noise = arg;
+	struct {
+		int8_t *noise;
+		int *freq;
+	} *args = arg;
+
 	struct nlattr **tb = nl80211_parse(msg);
 	struct nlattr *si[NL80211_SURVEY_INFO_MAX + 1];
 
@@ -1676,22 +1680,33 @@ static int nl80211_get_noise_cb(struct nl_msg *msg, void *arg)
 	                     tb[NL80211_ATTR_SURVEY_INFO], sp))
 		return NL_SKIP;
 
-	if (!si[NL80211_SURVEY_INFO_NOISE])
+	if (!si[NL80211_SURVEY_INFO_NOISE] || !si[NL80211_SURVEY_INFO_FREQUENCY])
 		return NL_SKIP;
 
-	if (!*noise || si[NL80211_SURVEY_INFO_IN_USE])
-		*noise = (int8_t)nla_get_u8(si[NL80211_SURVEY_INFO_NOISE]);
+	if (!*args->noise ||
+		(nla_get_u32(si[NL80211_SURVEY_INFO_FREQUENCY]) == *args->freq &&
+		si[NL80211_SURVEY_INFO_IN_USE])) {
+			*args->noise = (int8_t)nla_get_u8(si[NL80211_SURVEY_INFO_NOISE]);
+	}
 
 	return NL_SKIP;
 }
 
-
 static int nl80211_get_noise(const char *ifname, int *buf)
 {
 	int8_t noise = 0;
+	int freq = 0;
+
+	struct {
+		int8_t *noise;
+		int *freq;
+	} args = { .noise = &noise, .freq = &freq };
+
+	if (nl80211_get_frequency(ifname, &freq) < 0)
+		goto out;
 
 	if (nl80211_request(ifname, NL80211_CMD_GET_SURVEY, NLM_F_DUMP,
-	                    nl80211_get_noise_cb, &noise))
+	                    nl80211_get_noise_cb, &args))
 		goto out;
 
 	*buf = noise;
