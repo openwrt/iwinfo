@@ -2872,6 +2872,8 @@ static int nl80211_get_scanlist_wpactl(const char *ifname, char *buf, int *len)
 			if (!bssid || !freq || !signal || !flags)
 				continue;
 
+			memset(e, 0, sizeof(*e));
+
 			/* BSSID */
 			e->mac[0] = strtol(&bssid[0],  NULL, 16);
 			e->mac[1] = strtol(&bssid[3],  NULL, 16);
