@@ -1316,6 +1316,10 @@ static int nl80211_get_ssid(const char *ifname, char *buf)
 		nl80211_hostapd_query(ifname, "ssid", sb.ssid,
 		                      IWINFO_ESSID_MAX_SIZE + 1);
 
+	if (sb.ssid[0] == 0)
+		nl80211_hostapd_query(ifname, "ssid2", sb.ssid,
+		                      IWINFO_ESSID_MAX_SIZE + 1);
+
 	/* failed, try to obtain Mesh ID */
 	if (sb.ssid[0] == 0)
 		iwinfo_ubus_query(res ? res : ifname, "mesh_id",
