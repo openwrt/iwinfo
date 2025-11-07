@@ -1,0 +1,2 @@
+version=4
+# When using git snapshots, you can wire this to git.openwrt.org tags once available.
