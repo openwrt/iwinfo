@@ -707,7 +707,7 @@ static int nl80211_freq2channel(int freq)
  * Copyright 2017 Intel Deutschland GmbH
  * Copyright (C) 2018-2022 Intel Corporation
  */
-static int nl80211_channel2freq(int channel, const char *band, bool ax)
+static int nl80211_channel2freq(const int channel, const char *band, const int opclass)
 {
 	if (channel < 1)
 		return 0;
@@ -724,7 +724,8 @@ static int nl80211_channel2freq(int channel, const char *band, bool ax)
 		if (channel < 7)
 			return 56160 + 2160 * channel;
 	}
-	else if (ax)
+	// 6GHz: opclass between 131 and 137
+	else if (opclass >= 131 && opclass <= 137)
 	{
 		if (channel == 2)
 			return 5935;
@@ -1492,7 +1493,7 @@ static int nl80211_get_frequency_info_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_frequency(const char *ifname, int *buf)
 {
-	char *res, channel[4] = { 0 }, hwmode[3] = { 0 }, ax[2] = { 0 };
+	char *res, channel[4] = { 0 }, hwmode[3] = { 0 }, opclass[4] = { 0 };
 
 	/* try to find frequency from interface info */
 	res = nl80211_phy2ifname(ifname);
@@ -1505,9 +1506,9 @@ static int nl80211_get_frequency(const char *ifname, int *buf)
 	if ((*buf == 0) &&
 	    nl80211_hostapd_query(ifname, "hw_mode", hwmode, sizeof(hwmode),
 	                                  "channel", channel, sizeof(channel),
-	                                  "ieee80211ax", ax, sizeof(ax)) >= 2)
+	                                  "op_class", opclass, sizeof(opclass)) >= 2)
 	{
-		*buf = nl80211_channel2freq(atoi(channel), hwmode, ax[0] == '1');
+		*buf = nl80211_channel2freq(atoi(channel), hwmode, atoi(opclass));
 	}
 
 	/* failed, try to find frequency from scan results */
@@ -3860,7 +3861,7 @@ const struct iwinfo_ops nl80211_ops = {
 	.mbssid_support   = nl80211_get_mbssid_support,
 	.hwmodelist       = nl80211_get_hwmodelist,
 	.htmodelist       = nl80211_get_htmodelist,
-	.htmode		  = nl80211_get_htmode,
+	.htmode           = nl80211_get_htmode,
 	.mode             = nl80211_get_mode,
 	.ssid             = nl80211_get_ssid,
 	.bssid            = nl80211_get_bssid,
