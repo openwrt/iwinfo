@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+IWINFO_BACKENDS ?= nl80211;wext
+IWINFO_BUILD_LUA ?= ON
+
+%:
+	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DIWINFO_BUILD_LUA=$(IWINFO_BUILD_LUA) \
+		-DIWINFO_BACKENDS="$(IWINFO_BACKENDS)"
+
+override_dh_auto_install:
+	dh_auto_install --destdir=$(CURDIR)/debian/tmp
