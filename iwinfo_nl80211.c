@@ -1874,7 +1874,8 @@ static const struct {
 	{ "EAP-SUITE-B-192", 4, IWINFO_KMGMT_8021x },
 	{ "EAP-SUITE-B",     4, IWINFO_KMGMT_8021x },
 	{ "EAP-SHA384",      4, IWINFO_KMGMT_8021x },
-	{ "EAP-SHA256",      0, IWINFO_KMGMT_8021x },
+	/* SHA256 counts as WPA3 as long as pmf is enabled; we check this below. */
+	{ "EAP-SHA256",      4, IWINFO_KMGMT_8021x },
 	{ "PSK-SHA256",      0, IWINFO_KMGMT_PSK },
 	{ "NONE",            0, IWINFO_KMGMT_NONE },
 	{ "None",            0, IWINFO_KMGMT_NONE },
@@ -1885,7 +1886,7 @@ static const struct {
 };
 
 static void parse_wpa_suites(const char *str, int defversion,
-                             uint8_t *versions, uint8_t *suites)
+                             uint8_t *versions, uint8_t *suites, int pmf)
 {
 	size_t l;
 	int i, version;
@@ -1920,6 +1921,35 @@ static void parse_wpa_suites(const char *str, int defversion,
 
 		p = q + strspn(q, sep);
 	}
+
+	/* Handle ieee80211w/pmf (management frame protection).
+	 *
+	 * Strictly:
+	 *  ieee80211w=2 && wpa_key_mgmt=WPA-EAP-SHA256
+	 *    => WPA3-Enterprise
+	 *  ieee80211w=1 && wpa_key_mgmt=WPA-EAP WPA-EAP-SHA256
+	 *    => WPA3-Enterprise transition
+	 *
+	 * Here we just try to aggressively downgrade (i.e. if no pmf,
+	 * not WPA3-Enterprise, and if not required then WPA2/WPA3).
+	 * This _will_ allow some invalid configurations through
+	 * and count certain undefined configurations as WPA2/WPA3
+	 * (e.g. WPA-EAP-SHA256 only and ieee80211=1).
+	 */
+	if ((*suites & IWINFO_KMGMT_8021x) && (*versions & 4))
+		switch(pmf)
+		{
+		case 0: /* if disabled, it's not WPA3 */
+			*versions &= ~4;
+			*versions |= defversion;
+			break;
+		case 1: /* if not required, not only WPA3 */
+			*versions |= defversion;
+			break;
+		case 2: /* pmf required */
+		default: /* if no pmf info - e.g. from scan */
+			break;
+		}
 }
 
 static const struct {
@@ -1974,6 +2004,7 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 	uint8_t wpa_version = 0;
 	char wpa[2], wpa_key_mgmt[64], wpa_pairwise[16], wpa_groupwise[16];
 	char auth_algs[2], wep_key0[27], wep_key1[27], wep_key2[27], wep_key3[27];
+	char ieee80211w[2], pmf[2];
 	char mode[16];
 
 	struct iwinfo_crypto_entry *c = (struct iwinfo_crypto_entry *)buf;
@@ -1983,6 +2014,7 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 			"pairwise_cipher", wpa_pairwise,  sizeof(wpa_pairwise),
 			"group_cipher",    wpa_groupwise, sizeof(wpa_groupwise),
 			"key_mgmt",        wpa_key_mgmt,  sizeof(wpa_key_mgmt),
+			"pmf",             pmf,           sizeof(pmf),
 			"mode",            mode,          sizeof(mode)))
 	{
 		/* WEP or Open */
@@ -2031,7 +2063,7 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 				wpa_version = 1;
 			}
 
-			parse_wpa_suites(p, wpa_version, &c->wpa_version, &c->auth_suites);
+			parse_wpa_suites(p, wpa_version, &c->wpa_version, &c->auth_suites, atoi(pmf));
 
 			c->enabled = !!(c->wpa_version && c->auth_suites);
 		}
@@ -2044,6 +2076,7 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 				"wpa",          wpa,          sizeof(wpa),
 				"wpa_key_mgmt", wpa_key_mgmt, sizeof(wpa_key_mgmt),
 				"wpa_pairwise", wpa_pairwise, sizeof(wpa_pairwise),
+				"ieee80211w",   ieee80211w,   sizeof(ieee80211w),
 				"auth_algs",    auth_algs,    sizeof(auth_algs),
 				"wep_key0",     wep_key0,     sizeof(wep_key0),
 				"wep_key1",     wep_key1,     sizeof(wep_key1),
@@ -2062,7 +2095,7 @@ static int nl80211_get_encryption(const char *ifname, char *buf)
 				if (!strncmp(p, "FT-", 3))
 					p += 3;
 
-				parse_wpa_suites(p, atoi(wpa), &c->wpa_version, &c->auth_suites);
+				parse_wpa_suites(p, atoi(wpa), &c->wpa_version, &c->auth_suites, atoi(ieee80211w));
 			}
 
 			c->enabled = c->wpa_version ? 1 : 0;
@@ -2646,7 +2679,7 @@ static void nl80211_get_scancrypto(char *spec, struct iwinfo_crypto_entry *c)
 
 		c->enabled = 1;
 
-		parse_wpa_suites(suites, wpa_version, &c->wpa_version, &c->auth_suites);
+		parse_wpa_suites(suites, wpa_version, &c->wpa_version, &c->auth_suites, -1);
 		parse_wpa_ciphers(suites, &c->pair_ciphers);
 	}
 }
