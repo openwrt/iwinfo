@@ -2232,6 +2232,9 @@ static int nl80211_get_survey_cb(struct nl_msg *msg, void *arg)
 	if (rc)
 		return NL_SKIP;
 
+	if (arr->count >= arr->max_count)
+		return NL_SKIP;
+
 	/* advance to end of array */
 	e += arr->count;
 	memset(e, 0, sizeof(*e));
@@ -2357,6 +2360,9 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 		[NL80211_RATE_INFO_SHORT_GI]     = { .type = NLA_FLAG   },
 	};
 
+	if (arr->count >= arr->max_count)
+		return NL_SKIP;
+
 	/* advance to end of array */
 	e += arr->count;
 	memset(e, 0, sizeof(*e));
@@ -2479,7 +2485,11 @@ static int nl80211_get_assoclist_cb(struct nl_msg *msg, void *arg)
 
 static int nl80211_get_survey(const char *ifname, char *buf, int *len)
 {
-	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
+	struct nl80211_array_buf arr = {
+		.buf = buf,
+		.count = 0,
+		.max_count = IWINFO_BUFSIZE / sizeof(struct iwinfo_survey_entry),
+	};
 	int rc;
 
 	rc = nl80211_request(ifname, NL80211_CMD_GET_SURVEY,
@@ -2497,7 +2507,11 @@ static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
 	DIR *d;
 	int i, noise = 0;
 	struct dirent *de;
-	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
+	struct nl80211_array_buf arr = {
+		.buf = buf,
+		.count = 0,
+		.max_count = IWINFO_BUFSIZE / sizeof(struct iwinfo_assoclist_entry),
+	};
 	struct iwinfo_assoclist_entry *e;
 
 	if ((d = opendir("/sys/class/net")) != NULL)
@@ -3220,6 +3234,9 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 					    freqs[NL80211_FREQUENCY_ATTR_DISABLED])
 						continue;
 
+					if (arr->count >= arr->max_count)
+						return NL_SKIP;
+
 					e->band = nl80211_get_band(band->nla_type);
 					e->mhz = nla_get_u32(freqs[NL80211_FREQUENCY_ATTR_FREQ]);
 					e->channel = nl80211_freq2channel(e->mhz);
@@ -3260,7 +3277,11 @@ static int nl80211_get_freqlist_cb(struct nl_msg *msg, void *arg)
 static int nl80211_get_freqlist(const char *ifname, char *buf, int *len)
 {
 	struct nl80211_msg_conveyor *cv;
-	struct nl80211_array_buf arr = { .buf = buf, .count = 0 };
+	struct nl80211_array_buf arr = {
+		.buf = buf,
+		.count = 0,
+		.max_count = IWINFO_BUFSIZE / sizeof(struct iwinfo_freqlist_entry),
+	};
 	uint32_t features = nl80211_get_protocol_features(ifname);
 	int flags;
 
