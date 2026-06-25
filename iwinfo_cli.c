@@ -820,7 +820,7 @@ static void print_freqlist(const struct iwinfo_ops *iw, const char *ifname)
 static void print_assoclist(const struct iwinfo_ops *iw, const char *ifname)
 {
 	int i, len;
-	char buf[IWINFO_BUFSIZE];
+	char buf[IWINFO_ASSOCLIST_BUFSIZE];
 	struct iwinfo_assoclist_entry *e;
 
 	if (iw->assoclist(ifname, buf, &len))

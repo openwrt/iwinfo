@@ -2510,7 +2510,7 @@ static int nl80211_get_assoclist(const char *ifname, char *buf, int *len)
 	struct nl80211_array_buf arr = {
 		.buf = buf,
 		.count = 0,
-		.max_count = IWINFO_BUFSIZE / sizeof(struct iwinfo_assoclist_entry),
+		.max_count = IWINFO_ASSOCLIST_BUFSIZE / sizeof(struct iwinfo_assoclist_entry),
 	};
 	struct iwinfo_assoclist_entry *e;
 
