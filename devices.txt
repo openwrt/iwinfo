@@ -259,6 +259,7 @@
 "qca,qca9530-wmac"      0      0  "Qualcomm Atheros"  "QCA9530"
 "qca,qca9550-wmac"      0      0  "Qualcomm Atheros"  "QCA9550"
 "qca,qca9560-wmac"      0      0  "Qualcomm Atheros"  "QCA9560"
+"qca,qcn5502-wifi"      0      0  "Qualcomm" "QCN5502"
 "qcom,ipq4019-wifi"     0      0  "Qualcomm Atheros" "IPQ4019"
 "qcom,ipq5018-wifi"     0      0  "Qualcomm Atheros" "IPQ5018"
 "qcom,ipq6018-wifi"     0      0  "Qualcomm Atheros" "IPQ6018"
