@@ -206,6 +206,7 @@
 
 # USB devices
 # 0x0000 | 0x0000 | vendor id | product id | ...
+0x0000 0x0000 0x13d3 0x3327    0      0  "Atheros" "AR9271"
 # mt7601u/usb.c
 0x0000 0x0000 0x148f 0x7601    0      0  "MediaTek" "MT7601U"
 # mt7921/usb.c
