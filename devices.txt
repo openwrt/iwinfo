@@ -252,6 +252,7 @@
 0x0000 0x0000 0x043e 0x310c    0      0  "LG" "LGSBWAC02"
 # rtl8xxxu/rtl8xxxu_core.c
 0x0000 0x0000 0x0bda 0x8176    0      0  "Realtek" "RTL8188CU"
+0x0000 0x0000 0x0bda 0x8179    0      0  "Realtek" "RTL8188EUS"
 0x0000 0x0000 0x0bda 0xf179    0      0  "Realtek" "RTL8188FTV"
 
 # FDT compatible strings
