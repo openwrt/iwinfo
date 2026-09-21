@@ -258,6 +258,8 @@
 0x0000 0x0000 0x0bda 0xf179    0      0  "Realtek" "RTL8188FTV"
 # rtw88/rtw8822bu.c
 0x0000 0x0000 0x2357 0x0115    0      0  "TP-Link" "Archer T4U v3"
+# rtw88/rtw8821au.c
+0x0000 0x0000 0x2357 0x011f    0      0  "TP-Link" "Archer T2U v3"
 
 # FDT compatible strings
 # "compatible" | txpower offset | frequency offset | ...
