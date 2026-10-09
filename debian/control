@@ -1,0 +1,49 @@
+Source: iwinfo
+Section: libs
+Priority: optional
+Maintainer: Russ Dill <russ.dill@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               pkg-config,
+               make,
+               gcc,
+               libnl-3-dev,
+               libnl-genl-3-dev,
+               libuci-dev,
+               libubus-dev,
+               libubox-dev,
+               lua5.1,
+               liblua5.1-dev
+Standards-Version: 4.7.0
+Homepage: https://github.com/openwrt/iwinfo
+Rules-Requires-Root: no
+
+Package: libiwinfo0
+Section: libs
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Wireless information library (runtime)
+ iwinfo exposes wireless driver info via a common API.
+
+Package: libiwinfo-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: libiwinfo0 (= ${binary:Version}), ${misc:Depends}
+Description: Wireless information library (development files)
+ Headers and linker symlink for libiwinfo.
+
+Package: iwinfo
+Section: net
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libiwinfo0 (= ${binary:Version}), libuci0
+Description: Wireless information tool (CLI)
+ Command-line frontend for the iwinfo library.
+
+Package: libiwinfo-plugin-lua5.1
+Section: libs
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}, libiwinfo0 (= ${binary:Version}), lua5.1, liblua5.1
+Description: Lua 5.1 module for iwinfo
+ Lua bindings for the iwinfo library.

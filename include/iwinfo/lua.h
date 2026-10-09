@@ -16,7 +16,7 @@
  * with the iwinfo library. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef __IWINFO_LUALUB_H_
+#ifndef __IWINFO_LUALIB_H_
 #define __IWINFO_LUALIB_H_
 
 #include <lua.h>
