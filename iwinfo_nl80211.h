@@ -67,6 +67,7 @@ struct nl80211_rssi_rate {
 struct nl80211_array_buf {
 	void *buf;
 	int count;
+	int max_count;
 };
 
 #endif

@@ -328,7 +328,7 @@ static void set_rateinfo(lua_State *L, struct iwinfo_rate_entry *r, bool rx)
 static int iwinfo_L_assoclist(lua_State *L, int (*func)(const char *, char *, int *))
 {
 	int i, len;
-	char rv[IWINFO_BUFSIZE];
+	char rv[IWINFO_ASSOCLIST_BUFSIZE];
 	char macstr[18];
 	const char *ifname = luaL_checkstring(L, 1);
 	struct iwinfo_assoclist_entry *e;
