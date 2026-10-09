@@ -27,6 +27,7 @@
 #include <glob.h>
 #include <fnmatch.h>
 #include <stdarg.h>
+#include <endian.h>
 #include <stdlib.h>
 
 #include "iwinfo_nl80211.h"
@@ -3340,6 +3341,9 @@ struct nl80211_modes
 
 static void nl80211_eval_modelist(struct nl80211_modes *m)
 {
+	uint16_t he_cap = le16toh(m->he_phy_cap[0]);
+	uint16_t eht_cap = le16toh(m->eht_phy_cap[0]);
+
 	/* Treat any nonzero capability as 11n */
 	if (m->nl_ht > 0)
 	{
@@ -3350,33 +3354,33 @@ static void nl80211_eval_modelist(struct nl80211_modes *m)
 			m->ht |= IWINFO_HTMODE_HT40;
 	}
 
-	if (m->he_phy_cap[0] != 0) {
+	if (he_cap) {
 		m->hw |= IWINFO_80211_AX;
 		m->ht |= IWINFO_HTMODE_HE20;
 
-		if (m->he_phy_cap[0] & BIT(9))
+		if (he_cap & BIT(9))
 			m->ht |= IWINFO_HTMODE_HE40;
-		if (m->he_phy_cap[0] & BIT(10))
+		if (he_cap & BIT(10))
 			m->ht |= IWINFO_HTMODE_HE40 | IWINFO_HTMODE_HE80;
-		if (m->he_phy_cap[0] & BIT(11))
+		if (he_cap & BIT(11))
 			m->ht |= IWINFO_HTMODE_HE160;
-		if (m->he_phy_cap[0] & BIT(12))
+		if (he_cap & BIT(12))
 			m->ht |= IWINFO_HTMODE_HE160 | IWINFO_HTMODE_HE80_80;
 	}
 
-	if (m->eht_phy_cap[0] != 0) {
+	if (eht_cap) {
 		m->hw |= IWINFO_80211_BE;
 		m->ht |= IWINFO_HTMODE_EHT20;
 
-		if (m->he_phy_cap[0] & BIT(9))
+		if (he_cap & BIT(9))
 			m->ht |= IWINFO_HTMODE_EHT40;
-		if (m->he_phy_cap[0] & BIT(10))
+		if (he_cap & BIT(10))
 			m->ht |= IWINFO_HTMODE_EHT40 | IWINFO_HTMODE_EHT80;
-		if (m->he_phy_cap[0] & BIT(11))
+		if (he_cap & BIT(11))
 			m->ht |= IWINFO_HTMODE_EHT160;
-		if (m->he_phy_cap[0] & BIT(12))
+		if (he_cap & BIT(12))
 			m->ht |= IWINFO_HTMODE_EHT160 | IWINFO_HTMODE_EHT80_80;
-		if ((m->eht_phy_cap[0] & BIT(9)) && (m->bands & IWINFO_BAND_6))
+		if ((eht_cap & BIT(9)) && (m->bands & IWINFO_BAND_6))
 			m->ht |= IWINFO_HTMODE_EHT320;
 	}
 
