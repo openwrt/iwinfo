@@ -1242,6 +1242,20 @@ static int nl80211_get_macaddr_cb(struct nl_msg *msg, void *arg)
 	return NL_SKIP;
 }
 
+static int nl80211_get_ssid_cb(struct nl_msg *msg, void *arg)
+{
+	struct nl80211_ssid_bssid *sb = arg;
+	struct nlattr **tb = nl80211_parse(msg);
+
+	if (tb[NL80211_ATTR_SSID]) {
+		memset(sb->ssid, 0, IWINFO_ESSID_MAX_SIZE + 1);
+		memcpy(sb->ssid, nla_data(tb[NL80211_ATTR_SSID]),
+		       min(nla_len(tb[NL80211_ATTR_SSID]), IWINFO_ESSID_MAX_SIZE));
+	}
+
+	return NL_SKIP;
+}
+
 static int nl80211_get_ssid_bssid_cb(struct nl_msg *msg, void *arg)
 {
 	int ielen;
@@ -1386,14 +1400,25 @@ static int nl80211_get_ssid(const char *ifname, char *buf)
 	char *res;
 	struct nl80211_ssid_bssid sb = { .ssid = (unsigned char *)buf };
 
-	/* try to find ssid from scan dump results */
 	res = nl80211_phy2ifname(ifname);
 	sb.ssid[0] = 0;
 
-	nl80211_request(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP,
+	/* try to obtain ssid via NL80211_CMD_GET_INTERFACE */
+	nl80211_request(res ? res : ifname, NL80211_CMD_GET_INTERFACE, 0,
+	                nl80211_get_ssid_cb, &sb);
+
+	/* failed, try to find ssid from scan dump results */
+	if (sb.ssid[0] == 0)
+		nl80211_request(res ? res : ifname, NL80211_CMD_GET_SCAN, NLM_F_DUMP,
 	                nl80211_get_ssid_bssid_cb, &sb);
 
+	/* failed, try to find from ubus */
+	if (sb.ssid[0] == 0)
+		iwinfo_ubus_query(res ? res : ifname, "ssid",
+		                  buf, IWINFO_ESSID_MAX_SIZE + 1);
+
 	/* failed, try to find from hostapd info */
+	/* FIXME: does not parse escaped ssid in `ssid2` field */
 	if (sb.ssid[0] == 0)
 		nl80211_hostapd_query(ifname, "ssid", sb.ssid,
 		                      IWINFO_ESSID_MAX_SIZE + 1);
