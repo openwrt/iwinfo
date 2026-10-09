@@ -363,6 +363,12 @@ static int iwinfo_L_assoclist(lua_State *L, int (*func)(const char *, char *, in
 			lua_pushnumber(L, e->tx_packets);
 			lua_setfield(L, -2, "tx_packets");
 
+			lua_pushnumber(L, e->rx_bytes);
+			lua_setfield(L, -2, "rx_bytes");
+
+			lua_pushnumber(L, e->tx_bytes);
+			lua_setfield(L, -2, "tx_bytes");
+
 			set_rateinfo(L, &e->rx_rate, true);
 			set_rateinfo(L, &e->tx_rate, false);
 
