@@ -21,6 +21,7 @@
 
 
 #define IWINFO_BUFSIZE	24 * 1024
+#define IWINFO_ASSOCLIST_BUFSIZE	96 * 1024
 #define IWINFO_ESSID_MAX_SIZE	32
 
 enum iwinfo_80211 {
