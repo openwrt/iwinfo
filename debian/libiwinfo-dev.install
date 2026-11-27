@@ -1,0 +1,3 @@
+usr/include/iwinfo.h
+usr/include/iwinfo/*
+usr/lib/*/libiwinfo.so
